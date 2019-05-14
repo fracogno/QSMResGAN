@@ -136,8 +136,8 @@ def getDiscriminator(discrim_inputs, discrim_targets, ndf=64):
     # layer_5: [batch, 31, 31, ndf * 8] => [batch, 30, 30, 1]
     with tf.variable_scope("layer_%d" % (len(layers) + 1)):
         convolved = discrim_conv(rectified, out_channels=1, stride=1)
-        output = tf.sigmoid(convolved)
-        layers.append(output)
+        #output = tf.sigmoid(convolved)
+        layers.append(convolved)
 
     if "real" in tf.get_default_graph().get_name_scope():
         print("\nDiscriminator")
