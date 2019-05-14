@@ -99,17 +99,24 @@ with tf.name_scope('optimize'):
 
 train_op = gen_train
 
-# SUMMARIES - Create a list of summaries
-D_loss_summary = tf.summary.scalar('D_loss', D_loss)
-G_loss_summary = tf.summary.scalar('G_loss', G_gan)
-L1_loss_summary = tf.summary.scalar('L1_loss', G_L1)
 
+# SUMMARIES - Create a list of summaries
 tf.summary.image('input', X_tensor["x"][:, :, :, int(input_shape[2]/2)], max_outputs=1)
 tf.summary.image('output', Y_generated[:, :, :, int(input_shape[2]/2)], max_outputs=1)
 tf.summary.image('ground_truth', Y_tensor[:, :, :, int(input_shape[2]/2)], max_outputs=1)
 
 # MERGE SUMMARIES - Merge all summaries into a single op
 merged_summary_op = tf.summary.merge_all()
+
+# NON-MERGED SUMMARIES
+avg_D_loss = tf.placeholder(tf.float32, shape=())
+avg_G_loss = tf.placeholder(tf.float32, shape=())
+avg_L1_loss = tf.placeholder(tf.float32, shape=())
+
+D_loss_summary = tf.summary.scalar('D_loss', avg_D_loss)
+G_loss_summary = tf.summary.scalar('G_loss', avg_G_loss)
+L1_loss_summary = tf.summary.scalar('L1_loss', avg_L1_loss)
+
 
 # VISUALIZE => tensorboard --logdir=.
 summaries_dir = base_path + checkpointName
@@ -121,10 +128,10 @@ with tf.Session() as sess:
     
     # op to write logs to Tensorboard
     train_summary_writer = tf.summary.FileWriter(summaries_dir + '/train', graph=tf.get_default_graph())
-    # val_summary_writer = tf.summary.FileWriter(summaries_dir + '/val')
+    val_summary_writer = tf.summary.FileWriter(summaries_dir + '/val')
+    #val_avg_summary_writer = tf.summary.FileWriter(summaries_dir + '/val_avg')
 
     best_val_L1 = 100000
-    global_step = 0
     for n_epoch in range(1000):
         '''
             Training data : Feedforward and backpropagate first D and then G
@@ -133,20 +140,32 @@ with tf.Session() as sess:
         train_L1, train_G, train_D = [], [], []
         while True:
             try:
-                if global_step % 250 == 0:
-                    _, summary = sess.run([train_op, merged_summary_op])
-                    train_summary_writer.add_summary(summary, global_step)
+                if len(train_L1) == 0:
+                    _, summary, D_loss_val, G_L1_val, G_gan_val = sess.run([train_op, merged_summary_op, D_loss, G_L1, G_gan])
+                    train_summary_writer.add_summary(summary, n_epoch)
                 else:
-                    _ = sess.run(train_op)
-
-                global_step += 1
+                    _, D_loss_val, G_L1_val, G_gan_val = sess.run([train_op, D_loss, G_L1, G_gan])
+                    
+                train_D.append(D_loss_val)
+                train_L1.append(G_L1_val)
+                train_G.append(G_gan_val)
             except tf.errors.OutOfRangeError:
                 break
 
+        # Save averages of epoch to tensorboard
+        feed_dict = { 
+            avg_D_loss : np.mean(np.array(train_D)),
+            avg_G_loss : np.mean(np.array(train_G)),
+            avg_L1_loss : np.mean(np.array(train_L1))
+        }
+        L1_summary, G_summary, D_summary = sess.run([D_loss_summary, G_loss_summary, L1_loss_summary], feed_dict=feed_dict)
+        train_summary_writer.add_summary(L1_summary, n_epoch)
+        train_summary_writer.add_summary(D_summary, n_epoch)
+        train_summary_writer.add_summary(G_summary, n_epoch)
 
         '''
             Validation data : Check accuracy (L1) on validation
-        
+        '''
         sess.run(validation_init_op)
         total_val_L1 = []
         while True:
@@ -168,4 +187,4 @@ with tf.Session() as sess:
         # If better model, save it
         if val_L1 < best_val_L1:
             best_val_L1 = val_L1
-            save_path = saver.save(sess, summaries_dir + "/model.ckpt")'''
+            save_path = saver.save(sess, summaries_dir + "/model.ckpt")

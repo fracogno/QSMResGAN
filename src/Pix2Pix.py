@@ -109,7 +109,7 @@ def discrim_conv(batch_input, out_channels, stride):
 
 
 def getDiscriminator(discrim_inputs, discrim_targets, ndf=64):
-    n_layers = 3
+    n_layers = 2
     layers = []
 
     # 2x [batch, height, width, in_channels] => [batch, height, width, depth, in_channels * 2]
