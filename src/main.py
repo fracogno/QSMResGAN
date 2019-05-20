@@ -104,9 +104,8 @@ def generatorLoss(dis_fake, G_output, target, weight=100.0):
 
 
 
-
-D_loss = discriminatorLoss(D_logits_real, D_logits_fake, 0.9)
-G_loss, G_gan, G_L1 = generatorLoss(D_logits_fake, Y_generated, Y_tensor, 75.0)
+D_loss = discriminatorLoss(D_logits_real, D_logits_fake, 0.95)
+G_loss, G_gan, G_L1 = generatorLoss(D_logits_fake, Y_generated, Y_tensor, 100.0)
 
 # Optimizers
 with tf.name_scope('optimize'):
