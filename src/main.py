@@ -68,7 +68,7 @@ with tf.name_scope("fake_discriminator"):
 accuracy = tf.reduce_mean(tf.abs(Y_generated - Y_tensor))
 
 # Parameters
-lr = 0.0001
+lr = 0.0002
 batch_size = 1
 
 # Losses

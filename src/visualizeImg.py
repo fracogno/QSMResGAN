@@ -24,6 +24,8 @@ if realData:
 	Y = np.expand_dims(Y[8:136,16:144,], axis=-1)
 
 	plt.imsave(base_path + "results/"+Y_names[index]+".png", Y[:, :, 64, 0], cmap="gray")
+	#plt.imshow(a, cmap="gray")
+	#plt.show()
 else:
 	last_path = "shapes_shape64_ex512_2019_05_01"
 
