@@ -4,6 +4,7 @@ import datetime
 import os
 
 import Pix2Pix, utilities as util
+import UNET
 from tensorflow.python.client import device_lib 
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
@@ -14,24 +15,27 @@ print(device_lib.list_local_devices())
 base_path = "/scratch/cai/QSM-GAN/"
 #base_path = "/home/francesco/UQ/Job/QSM-GAN/"
 
-last_path = "shapes_shape64_ex512_2019_05_01"
-#last_path = "shapes_shape64_ex15_2019_04_17"
-#last_path = "shapes_shape16_ex5_2019_03_26"
-#last_path = "shapes_shape16_ex128_2019_04_17"
+#train_path = "shapes_shape64_ex512_2019_05_01"
+train_path = "shapes_shape64_ex100_2018_10_18"
+eval_path = "shapes_shape64_ex100_2018_10_18"
 
-path = base_path + "data/" + last_path
+#train_path = "shapes_shape64_ex15_2019_04_17"
+#train_path = "shapes_shape16_ex5_2019_03_26"
+#train_path = "shapes_shape16_ex128_2019_04_17"
+
+path = base_path + "data/"
 
 currenttime = datetime.datetime.now()
 checkpointName = "checkpoints_" + str(currenttime.year) + "-" + str(currenttime.month) + "-" + \
                     str(currenttime.day) + "_" + str(currenttime.hour) + str(currenttime.minute) + \
-                    "_" + last_path
+                    "_" + train_path
 
 tf.reset_default_graph()
 input_shape = (64, 64, 64, 1)
 #input_shape = (16, 16, 16, 1)
 
-train_data_filename = util.generate_file_list(file_path=path + "/train/", p_shape=input_shape)
-eval_data_filename = util.generate_file_list(file_path=path + "/eval/", p_shape=input_shape)
+train_data_filename = util.generate_file_list(file_path=path + train_path + "/train/", p_shape=input_shape)
+eval_data_filename = util.generate_file_list(file_path=path + eval_path + "/eval/", p_shape=input_shape)
 
 train_input_fn = util.data_input_fn(train_data_filename, p_shape=input_shape, batch=1, nepochs=1, shuffle=True)
 eval_input_fn = util.data_input_fn(eval_data_filename, p_shape=input_shape, batch=64, nepochs=1, shuffle=False)
@@ -51,6 +55,7 @@ validation_init_op = iterator.make_initializer(val_data[2])
 # Create networks
 with tf.variable_scope("generator"):
     Y_generated = Pix2Pix.getGenerator(X_tensor["x"])
+    #Y_generated = UNET.getNetwork(X_tensor)
 
 with tf.name_scope("real_discriminator"):
     with tf.variable_scope("discriminator"):
@@ -63,25 +68,10 @@ with tf.name_scope("fake_discriminator"):
 accuracy = tf.reduce_mean(tf.abs(Y_generated - Y_tensor))
 
 # Parameters
-lr = 0.0002
+lr = 0.0001
 batch_size = 1
-#EPS = 1e-12
 
 # Losses
-'''def discriminatorLoss(D_real, D_fake):
-   
-    discrim_loss = tf.reduce_mean(-(tf.log(D_real + EPS) + tf.log(1 - D_fake + EPS)))
-    
-    return discrim_loss
-
-def generatorLoss(D_fake, G_output, target, weight=100.0):
-    gen_loss_GAN = tf.reduce_mean(-tf.log(D_fake + EPS))
-    gen_loss_L1 = tf.reduce_mean(tf.abs(target -  G_output))
-    gen_loss = gen_loss_GAN * 1.0 + gen_loss_L1 * weight
-
-    return gen_loss, gen_loss_GAN, gen_loss_L1'''
-
-
 def discriminatorLoss(dis_real, dis_fake, smoothing=1.0):
 
     dis_real_ce = tf.nn.sigmoid_cross_entropy_with_logits(logits=dis_real, labels=tf.ones_like(dis_real) * smoothing)
@@ -103,8 +93,7 @@ def generatorLoss(dis_fake, G_output, target, weight=100.0):
     return gen_loss, gen_loss_gan, gen_loss_l1
 
 
-
-D_loss = discriminatorLoss(D_logits_real, D_logits_fake, 0.95)
+D_loss = discriminatorLoss(D_logits_real, D_logits_fake, 0.9)
 G_loss, G_gan, G_L1 = generatorLoss(D_logits_fake, Y_generated, Y_tensor, 100.0)
 
 # Optimizers
@@ -161,9 +150,10 @@ with tf.Session() as sess:
         '''
         sess.run(training_init_op)
         train_L1, train_G, train_D = [], [], []
+        global_step = 0
         while True:
             try:
-                if len(train_L1) == 0:
+                if len(train_L1) == 0 or global_step % 25000 == 0:
                     _, summary, D_loss_val, G_L1_val, G_gan_val = sess.run([train_op, merged_summary_op, D_loss, G_L1, G_gan])
                     train_summary_writer.add_summary(summary, n_epoch)
                 else:
@@ -172,6 +162,7 @@ with tf.Session() as sess:
                 train_D.append(D_loss_val)
                 train_L1.append(G_L1_val)
                 train_G.append(G_gan_val)
+                global_step += 1
             except tf.errors.OutOfRangeError:
                 break
 

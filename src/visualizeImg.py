@@ -20,12 +20,10 @@ if realData:
 	X = nib.load(base_path + path + "phs_tissue_16x.nii").get_data()
 	Y = nib.load(base_path + path + Y_names[index]).get_data()
 
-	X = X*100
+	X = np.expand_dims(X[8:136,16:144,], axis=-1)
+	Y = np.expand_dims(Y[8:136,16:144,], axis=-1)
 
-	X = np.expand_dims(X[40:104,48:112,32:96], axis=-1)
-	Y = np.expand_dims(Y[40:104,48:112,32:96], axis=-1)
-
-	plt.imsave(base_path + "results/"+Y_names[index]+".png", Y[:, :, 32, 0], cmap="gray")
+	plt.imsave(base_path + "results/"+Y_names[index]+".png", Y[:, :, 64, 0], cmap="gray")
 else:
 	last_path = "shapes_shape64_ex512_2019_05_01"
 
@@ -43,4 +41,4 @@ print(np.min(X))
 print(np.mean(X))
 
 print(X.shape)
-print(Y.shape)'''
+print(Y.shape)
