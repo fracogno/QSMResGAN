@@ -2,66 +2,45 @@ import tensorflow as tf
 import numpy as np
 import datetime
 import os
+import nibabel as nib
+import matplotlib.pyplot as plt
 
 import Pix2Pix, utilities as util
-from tensorflow.python.client import device_lib 
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="0"  # specify which GPU(s) to be used
-print(device_lib.list_local_devices())
 
 # Paths
-checkpoint_path = "/home/francesco/UQ/Job/QSM-GAN/checkpoints_2019-5-7_1223_shapes_shape64_ex512_2019_05_01/model.ckpt"
-data_path = "/home/francesco/UQ/Job/QSM-GAN/data/shapes_shape64_ex512_2019_05_01/"
+data_path = "/scratch/cai/QSM-GAN/data/qsm_recon_challenge_deepQSM/phs_tissue_16x.nii"
+base_path = "/scratch/cai/QSM-GAN/"
+checkpoint_name = "checkpoints_2019-5-24_1845_shapes_shape64_ex100_2018_10_18"
 
 
+# 64 => [40:104,48:112,32:96]
+# 128 => [8:136,16:144,:]
+X = nib.load(data_path).get_data()
+X = np.expand_dims(X[8:136,16:144,:], axis=-1)
+stabilizationFactor = 10
+X = X * stabilizationFactor
+print(X.shape)
 
 tf.reset_default_graph()
-input_shape = (64, 64, 64, 1)
 
-train_data_filename = util.generate_file_list(file_path=data_path + "/train/", p_shape=input_shape)
-eval_data_filename = util.generate_file_list(file_path=data_path + "/eval/", p_shape=input_shape)
-
-train_input_fn = util.data_input_fn(train_data_filename, p_shape=input_shape, batch=1, nepochs=1, shuffle=True)
-eval_input_fn = util.data_input_fn(eval_data_filename, p_shape=input_shape, batch=64, nepochs=1, shuffle=True)
-
-# Unpack tensors
-train_data = train_input_fn()
-val_data = eval_input_fn()
-
-# Construct a suitable iterator (and ops) for switching between the datasets
-iterator = tf.data.Iterator.from_structure(train_data[2].output_types, train_data[2].output_shapes)
-X_tensor, Y_tensor = iterator.get_next()
-
-training_init_op = iterator.make_initializer(train_data[2])
-validation_init_op = iterator.make_initializer(val_data[2])
-
+input_shape = 128
+X_tensor = tf.placeholder(tf.float32, shape=[None, input_shape, input_shape, input_shape, 1], name='X')
 
 # Create networks
 with tf.variable_scope("generator"):
-    Y_generated = Pix2Pix.getGenerator(X_tensor["x"])
-
-with tf.name_scope("real_discriminator"):
-    with tf.variable_scope("discriminator"):
-        D_logits_real = Pix2Pix.getDiscriminator(X_tensor["x"], Y_tensor)
-      
-with tf.name_scope("fake_discriminator"):
-    with tf.variable_scope("discriminator", reuse=True):
-        D_logits_fake = Pix2Pix.getDiscriminator(X_tensor["x"], Y_generated)
-
-accuracy = tf.reduce_mean(tf.abs(Y_generated - Y_tensor))
+    Y_generated = Pix2Pix.getGenerator(X_tensor)
 
 with tf.Session() as sess:
-    saver = tf.train.Saver()
-    sess.run(tf.global_variables_initializer())
-    saver.restore(sess, checkpoint_path) 
+	saver = tf.train.Saver()
+	sess.run(tf.global_variables_initializer())
+	saver.restore(sess, base_path + checkpoint_name + "/model.ckpt")
 
-    sess.run(validation_init_op)
-    total_val_L1 = []
-    while True:
-        try:
-            
-            summary, val_L1 = sess.run([merged_summary_op, accuracy])
-            break
-        except tf.errors.OutOfRangeError:
-            break
+	X_final = sess.run(Y_generated, feed_dict={X_tensor : [X]})
+	X_final /= stabilizationFactor
+
+	plt.imsave(base_path + "results/gan.png", X_final[0, :, :, int(input_shape//2), 0], cmap="gray")
+        
+print("END")
