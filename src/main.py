@@ -4,7 +4,6 @@ import datetime
 import os
 
 import Pix2Pix, utilities as util
-import UNET
 from tensorflow.python.client import device_lib 
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
