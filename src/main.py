@@ -12,25 +12,21 @@ print(device_lib.list_local_devices())
 
 # Paths
 base_path = "/scratch/cai/QSM-GAN/"
-#base_path = "/home/francesco/UQ/Job/QSM-GAN/"
+#data_path = "shapes_shape64_ex100_2018_10_18"
+data_path = "data/shapes_shape64_ex15_2019_04_17"
 
-train_path = "shapes_shape64_ex100_2018_10_18"
-eval_path = "shapes_shape64_ex100_2018_10_18"
-
-#train_path = "shapes_shape64_ex15_2019_04_17"
-
-path = base_path + "data/"
-
-currenttime = datetime.datetime.now()
-checkpointName = "checkpoints_" + str(currenttime.year) + "-" + str(currenttime.month) + "-" + \
-                    str(currenttime.day) + "_" + str(currenttime.hour) + str(currenttime.minute) + \
-                    "_" + train_path
-
-tf.reset_default_graph()
 input_shape = (64, 64, 64, 1)
 
-train_data_filename = util.generate_file_list(file_path=path + train_path + "/train/", p_shape=input_shape)
-eval_data_filename = util.generate_file_list(file_path=path + eval_path + "/eval/", p_shape=input_shape)
+# Create checkpoints path
+currenttime = datetime.datetime.now()
+checkpointName = "checkpoints_" + str(currenttime.year) + "-" + str(currenttime.month) + "-" + str(currenttime.day) + \
+					"_" + str(currenttime.hour) + str(currenttime.minute) + "_" + data_path.split("/")[-1]
+
+tf.reset_default_graph()
+
+# Get train and valid data
+train_data_filename = util.generate_file_list(file_path=base_path + data_path + "/train/", p_shape=input_shape)
+eval_data_filename = util.generate_file_list(file_path=base_path + data_path + "/eval/", p_shape=input_shape)
 
 train_input_fn = util.data_input_fn(train_data_filename, p_shape=input_shape, batch=1, nepochs=1, shuffle=True)
 eval_input_fn = util.data_input_fn(eval_data_filename, p_shape=input_shape, batch=64, nepochs=1, shuffle=False)
@@ -46,11 +42,9 @@ X_tensor, Y_tensor = iterator.get_next()
 training_init_op = iterator.make_initializer(train_data[2])
 validation_init_op = iterator.make_initializer(val_data[2])
 
-
 # Create networks
 with tf.variable_scope("generator"):
     Y_generated = Pix2Pix.getGenerator(X_tensor["x"])
-    #Y_generated = UNET.getNetwork(X_tensor)
 
 with tf.name_scope("real_discriminator"):
     with tf.variable_scope("discriminator"):
