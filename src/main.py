@@ -14,13 +14,10 @@ print(device_lib.list_local_devices())
 base_path = "/scratch/cai/QSM-GAN/"
 #base_path = "/home/francesco/UQ/Job/QSM-GAN/"
 
-#train_path = "shapes_shape64_ex512_2019_05_01"
 train_path = "shapes_shape64_ex100_2018_10_18"
 eval_path = "shapes_shape64_ex100_2018_10_18"
 
 #train_path = "shapes_shape64_ex15_2019_04_17"
-#train_path = "shapes_shape16_ex5_2019_03_26"
-#train_path = "shapes_shape16_ex128_2019_04_17"
 
 path = base_path + "data/"
 
@@ -31,7 +28,6 @@ checkpointName = "checkpoints_" + str(currenttime.year) + "-" + str(currenttime.
 
 tf.reset_default_graph()
 input_shape = (64, 64, 64, 1)
-#input_shape = (16, 16, 16, 1)
 
 train_data_filename = util.generate_file_list(file_path=path + train_path + "/train/", p_shape=input_shape)
 eval_data_filename = util.generate_file_list(file_path=path + eval_path + "/eval/", p_shape=input_shape)
@@ -67,7 +63,7 @@ with tf.name_scope("fake_discriminator"):
 accuracy = tf.reduce_mean(tf.abs(Y_generated - Y_tensor))
 
 # Parameters
-lr = 0.0002
+lr = 0.0001
 batch_size = 1
 
 # Losses
@@ -140,7 +136,6 @@ with tf.Session() as sess:
     # op to write logs to Tensorboard
     train_summary_writer = tf.summary.FileWriter(summaries_dir + '/train', graph=tf.get_default_graph())
     val_summary_writer = tf.summary.FileWriter(summaries_dir + '/val')
-    #val_avg_summary_writer = tf.summary.FileWriter(summaries_dir + '/val_avg')
 
     best_val_L1 = 100000
     for n_epoch in range(1000):
