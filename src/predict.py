@@ -15,19 +15,24 @@ data_path = "/scratch/cai/QSM-GAN/data/qsm_recon_challenge_deepQSM/phs_tissue_16
 base_path = "/scratch/cai/QSM-GAN/"
 checkpoint_name = "checkpoints_2019-5-24_1845_shapes_shape64_ex100_2018_10_18"
 
-
-# 64 => [40:104,48:112,32:96]
-# 128 => [8:136,16:144,:]
+# Load data
 X = nib.load(data_path).get_data()
-X = np.expand_dims(X[8:136,16:144,:], axis=-1)
 stabilizationFactor = 10
 X = X * stabilizationFactor
 print(X.shape)
 
-tf.reset_default_graph()
+# Add padding
+SIZE = 256
+val_X = (SIZE - X.shape[0]) // 2
+val_Y = (SIZE - X.shape[1]) // 2
+val_Z = (SIZE - X.shape[2]) // 2
+X = np.pad(X, [(val_X, ), (val_Y, ), (val_Z, )],  'constant', constant_values=(0.0))
+X = np.expand_dims(X, axis=-1)
+print(X.shape)
 
-input_shape = 128
-X_tensor = tf.placeholder(tf.float32, shape=[None, input_shape, input_shape, input_shape, 1], name='X')
+# Start prediction
+tf.reset_default_graph()
+X_tensor = tf.placeholder(tf.float32, shape=[None, SIZE, SIZE, SIZE, 1], name='X')
 
 # Create networks
 with tf.variable_scope("generator"):
@@ -41,6 +46,9 @@ with tf.Session() as sess:
 	X_final = sess.run(Y_generated, feed_dict={X_tensor : [X]})
 	X_final /= stabilizationFactor
 
-	plt.imsave(base_path + "results/gan.png", X_final[0, :, :, int(input_shape//2), 0], cmap="gray")
+	X_final = X_final[0, val_X:-val_X, val_Y:-val_Y, val_Z:-val_Z]
+	print(X_final.shape)
+
+	plt.imsave(base_path + "results/gan.png", X_final[:, :, int(X_final.shape[-2]//2), 0], cmap="gray")
         
 print("END")
