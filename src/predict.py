@@ -1,25 +1,28 @@
 import tensorflow as tf
 import numpy as np
-import datetime
-import os
 import nibabel as nib
 import matplotlib.pyplot as plt
-
 import Pix2Pix, utilities as util
-
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="0"  # specify which GPU(s) to be used
+import pickle
 
 # Paths
-data_path = "/scratch/cai/QSM-GAN/data/qsm_recon_challenge_deepQSM/phs_tissue_16x.nii"
 base_path = "/scratch/cai/QSM-GAN/"
-checkpoint_name = "checkpoints_2019-5-24_1845_shapes_shape64_ex100_2018_10_18"
+data_path = "challenge/"
+filename = "phs_tissue.nii"
+#checkpoint_name = "checkpoints_2019-5-24_1845_shapes_shape64_ex100_2018_10_18"
+checkpoint_name = "checkpoints_2019-5-28_1616_shapes_shape64_ex100_2018_10_18"
 
 # Load data
-X = nib.load(data_path).get_data()
-stabilizationFactor = 10
-X = X * stabilizationFactor
+X = nib.load(base_path + data_path + filename).get_data()
 print(X.shape)
+
+# Normalize
+norm_val = 0 # 0 => NO NORM, 1 => STABILIZATION FACTOR, 2 => NORMALIZE
+if norm_val == 1:
+	stabilizationFactor = 10
+	X = X * stabilizationFactor
+elif norm_val == 2:
+	X, phase_mean, phase_std = util.norm(X)
 
 # Add padding
 SIZE = 256
@@ -44,11 +47,17 @@ with tf.Session() as sess:
 	saver.restore(sess, base_path + checkpoint_name + "/model.ckpt")
 
 	X_final = sess.run(Y_generated, feed_dict={X_tensor : [X]})
-	X_final /= stabilizationFactor
+	
+	# Remove normalization
+	if norm_val == 1:
+		X_final /= stabilizationFactor
+	elif norm_val == 2:
+		X_final = X_final + (3 * phase_mean)
+		X_final = X_final * (3 * phase_std)
 
-	X_final = X_final[0, val_X:-val_X, val_Y:-val_Y, val_Z:-val_Z]
+	assert(X_final.shape[0] == 1 and X_final.shape[4] == 1)
+	X_final = X_final[0, val_X:-val_X, val_Y:-val_Y, val_Z:-val_Z, 0]
 	print(X_final.shape)
 
-	plt.imsave(base_path + "results/gan.png", X_final[:, :, int(X_final.shape[-2]//2), 0], cmap="gray")
-        
+	with open(base_path + data_path + filename.split(".")[0] + "_result" + ".pkl",'wb') as f: pickle.dump(X_final, f)
 print("END")

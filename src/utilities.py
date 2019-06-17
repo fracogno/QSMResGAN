@@ -1,5 +1,6 @@
 import os
 import tensorflow as tf
+import numpy as np
 
 def generate_file_list(file_path, p_shape):
     """
