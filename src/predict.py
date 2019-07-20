@@ -1,28 +1,33 @@
 import tensorflow as tf
 import numpy as np
-import nibabel as nib
-import matplotlib.pyplot as plt
+import scipy.io
 import Pix2Pix, utilities as util
 import pickle
+import argparse
+
+parser = argparse.ArgumentParser(description='Parameters')
+parser.add_argument('--input_filename', type=str, help='Path to input file')
+parser.add_argument('--normalization', type=int, help='Apply normalization')
+parser.add_argument('--checkpoint', type=str, help='Path to checkpoint')
+args = parser.parse_args()
 
 # Paths
 base_path = "/scratch/cai/QSM-GAN/"
-data_path = "challenge/"
-filename = "phs_tissue.nii"
-#checkpoint_name = "checkpoints_2019-5-24_1845_shapes_shape64_ex100_2018_10_18"
-checkpoint_name = "checkpoints_2019-5-28_1616_shapes_shape64_ex100_2018_10_18"
 
 # Load data
-X = nib.load(base_path + data_path + filename).get_data()
-print(X.shape)
+X = scipy.io.loadmat(base_path + "challenge/" + args.input_filename + ".mat")[args.input_filename]
+msk = scipy.io.loadmat(base_path + "challenge/msk.mat")["msk"]
+X = X * msk
+Y = scipy.io.loadmat(base_path + "challenge/chi_33.mat")["chi_33"]
 
 # Normalize
-norm_val = 0 # 0 => NO NORM, 1 => STABILIZATION FACTOR, 2 => NORMALIZE
-if norm_val == 1:
-	stabilizationFactor = 10
-	X = X * stabilizationFactor
-elif norm_val == 2:
+if args.normalization == 1:
 	X, phase_mean, phase_std = util.norm(X)
+elif args.normalization == 2:
+	X *= 10
+elif args.normalization != 0:
+	print("ERROR NORMALIZATION")
+	exit()
 
 # Add padding
 SIZE = 256
@@ -44,20 +49,29 @@ with tf.variable_scope("generator"):
 with tf.Session() as sess:
 	saver = tf.train.Saver()
 	sess.run(tf.global_variables_initializer())
-	saver.restore(sess, base_path + checkpoint_name + "/model.ckpt")
+	saver.restore(sess, base_path + args.checkpoint)
 
-	X_final = sess.run(Y_generated, feed_dict={X_tensor : [X]})
-	
-	# Remove normalization
-	if norm_val == 1:
-		X_final /= stabilizationFactor
-	elif norm_val == 2:
-		X_final = X_final + (3 * phase_mean)
-		X_final = X_final * (3 * phase_std)
+	# Predict from network
+	predicted = sess.run(Y_generated, feed_dict={X_tensor : [X]})
 
-	assert(X_final.shape[0] == 1 and X_final.shape[4] == 1)
-	X_final = X_final[0, val_X:-val_X, val_Y:-val_Y, val_Z:-val_Z, 0]
-	print(X_final.shape)
+	# De-normalize the raw output
+	if args.normalization == 1:
+		predicted = predicted + (3 * phase_mean)
+		predicted = predicted * (3 * phase_std)
+	elif args.normalization == 2:
+		predicted /= 10
 
-	with open(base_path + data_path + filename.split(".")[0] + "_result" + ".pkl",'wb') as f: pickle.dump(X_final, f)
-print("END")
+	assert(predicted.shape[0] == 1 and predicted.shape[-1] == 1)
+	predicted = predicted[0, val_X:-val_X, val_Y:-val_Y, val_Z:-val_Z, 0]
+	assert(predicted.shape[0] == msk.shape[0] and predicted.shape[1] == msk.shape[1] and predicted.shape[2] == msk.shape[2])
+	predicted = predicted * msk
+
+	# Save result
+	scipy.io.savemat("/scratch/cai/QSM-GAN/results/" + args.checkpoint.split("/")[0] + "-" + \
+			 str(args.normalization) + "-" + args.input_filename + "-TRUE.mat" , {"QSMGAN" : predicted} )
+
+	# Compute RMSE
+	predicted = predicted.flatten()
+	Y = Y.flatten()
+	rmse = 100 * np.linalg.norm( predicted - Y ) / np.linalg.norm(Y)
+	print(rmse)

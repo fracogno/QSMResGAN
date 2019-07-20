@@ -33,13 +33,13 @@ def data_input_fn(filenames, p_shape, batch=None, nepochs=None, shuffle=True):
         ground_truth = tf.decode_raw(parsed_record['ground_truth_img'], tf.float32)
         ground_truth = tf.reshape(ground_truth, [p_shape[0], p_shape[1], p_shape[2], 1])
 
-        return {"x": forward_image}, ground_truth
+        return forward_image, ground_truth
 
     def _input_fn():
 
         dataset = tf.data.TFRecordDataset(filenames, compression_type='GZIP').map(_parser)
         if shuffle:
-            dataset = dataset.shuffle(buffer_size=1000)
+            dataset = dataset.shuffle(buffer_size=5000)
         dataset = dataset.repeat(nepochs)
         dataset = dataset.batch(batch)
         # TODO some dataset cache can be made so you can cache on the harddisk
@@ -64,3 +64,27 @@ def norm(data):
     data = (data - mean) / std
 
     return data, mean, std
+
+
+def computeddRMSE(true, fake, mask):
+
+    true_flat = true.flatten()
+    fake_flat = fake.flatten()
+    mask_flat = np.array(mask.flatten(), dtype=bool)
+
+    # Get only elements in mask
+    true_new = true_flat[mask_flat]
+    fake_new = fake_flat[mask_flat]
+    
+    # Demean
+    true_demean = true_new - np.mean(true_new);
+    fake_demean = fake_new - np.mean(fake_new);
+
+    # Detrend
+    P = np.polyfit(fake_demean, true_demean, 1)
+    res = np.polyval(P, fake_demean)
+
+    # RMSE
+    ddrmse = 100 * np.linalg.norm( res - true_demean ) / np.linalg.norm(true_demean);
+
+    return ddrmse

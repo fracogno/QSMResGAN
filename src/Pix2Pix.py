@@ -26,7 +26,8 @@ def lrelu(x, a):
 
 
 def batchnorm(inputs):
-    return tf.keras.layers.BatchNormalization(axis=4, epsilon=1e-5, momentum=0.1, gamma_initializer=tf.random_normal_initializer(1.0, 0.02))(inputs)
+    return tf.layers.batch_normalization(inputs, axis=4, epsilon=1e-5, momentum=0.1, training=True, gamma_initializer=tf.random_normal_initializer(1.0, 0.02))
+
 
 
 def getGenerator(generator_inputs, ngf=64, generator_outputs_channels=1):
@@ -55,9 +56,9 @@ def getGenerator(generator_inputs, ngf=64, generator_outputs_channels=1):
                 layers.append(output)
 
         layer_specs = [
-            #(ngf * 8, 0.5),   # decoder_8: [batch, 1, 1, ngf * 8] => [batch, 2, 2, ngf * 8 * 2]
+            (ngf * 8, 0.5),   # decoder_8: [batch, 1, 1, ngf * 8] => [batch, 2, 2, ngf * 8 * 2]
             (ngf * 8, 0.5),   # decoder_7: [batch, 2, 2, ngf * 8 * 2] => [batch, 4, 4, ngf * 8 * 2]
-            (ngf * 8, 0.5),   # decoder_6: [batch, 4, 4, ngf * 8 * 2] => [batch, 8, 8, ngf * 8 * 2]
+            #(ngf * 8, 0.5),   # decoder_6: [batch, 4, 4, ngf * 8 * 2] => [batch, 8, 8, ngf * 8 * 2]
             #(ngf * 8, 0.0),   # decoder_5: [batch, 8, 8, ngf * 8 * 2] => [batch, 16, 16, ngf * 8 * 2]
             (ngf * 4, 0.0),   # decoder_4: [batch, 16, 16, ngf * 8 * 2] => [batch, 32, 32, ngf * 4 * 2]
             (ngf * 2, 0.0),   # decoder_3: [batch, 32, 32, ngf * 4 * 2] => [batch, 64, 64, ngf * 2 * 2]
@@ -93,12 +94,10 @@ def getGenerator(generator_inputs, ngf=64, generator_outputs_channels=1):
             #output = tf.tanh(output)
             layers.append(output)
         
-        if "generator" == tf.get_variable_scope().name:
-            print("Generator")
-            print(generator_inputs)
-            for i in layers:
-                print(i)
-
+        print(generator_inputs)
+        for i in layers:
+            print(i)
+        print()
         return layers[-1]
     
     
@@ -139,10 +138,8 @@ def getDiscriminator(discrim_inputs, discrim_targets, ndf=64):
         #output = tf.sigmoid(convolved)
         layers.append(convolved)
 
-    if "real" in tf.get_default_graph().get_name_scope():
-        print("\nDiscriminator")
-        print(input)
-        for i in layers:
-            print(i)
-
+    print(input)
+    for i in layers:
+        print(i)
+    print()
     return layers[-1]
