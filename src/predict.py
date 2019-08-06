@@ -3,6 +3,7 @@ import numpy as np
 import scipy.io
 import Pix2Pix, utilities as util
 import pickle
+import nibabel as nib
 import argparse
 
 parser = argparse.ArgumentParser(description='Parameters')
@@ -15,9 +16,22 @@ args = parser.parse_args()
 base_path = "/scratch/cai/QSM-GAN/"
 
 # Load data
-X = scipy.io.loadmat(base_path + "challenge/" + args.input_filename + ".mat")[args.input_filename]
-msk = scipy.io.loadmat(base_path + "challenge/msk.mat")["msk"]
-X = X * msk
+#X_original = scipy.io.loadmat(base_path + "challenge/" + args.input_filename + ".mat")[args.input_filename]
+img = nib.load(base_path + "challenge/" + args.input_filename + ".nii")
+X_original = img.get_data()
+msk = nib.load(base_path + "challenge/Sim1/MaskBrainExtracted.nii").get_data()
+
+TEin_s = 8 / 1000
+frequency_rad = X_original * TEin_s * 2 * np.pi
+centre_freq = 297190802
+frequency_ppm = frequency_rad / (2 * np.pi * TEin_s * centre_freq) * 1e6
+
+X_original = frequency_ppm
+
+# Add one if shape is not EVEN
+X = np.pad(X_original, [(int(X_original.shape[0] % 2 != 0), 0), (int(X_original.shape[1] % 2 != 0), 0), (int(X_original.shape[2] % 2 != 0), 0)],  'constant', constant_values=(0.0))
+print(X.shape)
+
 Y = scipy.io.loadmat(base_path + "challenge/chi_33.mat")["chi_33"]
 
 # Normalize
@@ -63,12 +77,23 @@ with tf.Session() as sess:
 
 	assert(predicted.shape[0] == 1 and predicted.shape[-1] == 1)
 	predicted = predicted[0, val_X:-val_X, val_Y:-val_Y, val_Z:-val_Z, 0]
+	print(predicted.shape)
+
+	# Remove where not EVEN
+	predicted = predicted[int(X_original.shape[0] % 2 != 0):, int(X_original.shape[1] % 2 != 0):, int(X_original.shape[2] % 2 != 0):]
+	print(predicted.shape)
+
 	assert(predicted.shape[0] == msk.shape[0] and predicted.shape[1] == msk.shape[1] and predicted.shape[2] == msk.shape[2])
-	predicted = predicted * msk
+	masked = predicted * msk
 
 	# Save result
 	scipy.io.savemat("/scratch/cai/QSM-GAN/results/" + args.checkpoint.split("/")[0] + "-" + \
-			 str(args.normalization) + "-" + args.input_filename + "-TRUE.mat" , {"QSMGAN" : predicted} )
+			 str(args.normalization) + "-" + args.input_filename.split("/")[0] + "-" + args.input_filename.split("/")[1] + ".mat" , {"QSMGAN" : masked} )
+
+	# Save NII
+	masked_img = nib.Nifti1Image(masked, img.affine)
+	nib.save(masked_img, "/scratch/cai/QSM-GAN/results/" + args.checkpoint.split("/")[0] + "-" + str(args.normalization) + "-" + \
+				 args.input_filename.split("/")[0] + "-" + args.input_filename.split("/")[1] + ".nii")
 
 	# Compute RMSE
 	predicted = predicted.flatten()
