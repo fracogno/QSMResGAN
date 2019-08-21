@@ -80,6 +80,8 @@ def computeddRMSE(true, fake, mask):
     true_demean = true_new - np.mean(true_new);
     fake_demean = fake_new - np.mean(fake_new);
 
+    rmse = 100 * np.linalg.norm( true_demean - fake_demean ) / np.linalg.norm(true_demean);
+
     # Detrend
     P = np.polyfit(fake_demean, true_demean, 1)
     res = np.polyval(P, fake_demean)
@@ -87,4 +89,48 @@ def computeddRMSE(true, fake, mask):
     # RMSE
     ddrmse = 100 * np.linalg.norm( res - true_demean ) / np.linalg.norm(true_demean);
 
-    return ddrmse
+    return rmse, ddrmse
+
+
+def getMetrics(Y, X, msk, FinalSegment):
+    # Metric 1 & 2
+    rmse, ddRMSE_detrend = computeddRMSE(Y, X, msk)
+
+    # Metric 3
+    msk2 = msk.copy()
+    choice = np.logical_or(np.greater(FinalSegment, 9), np.less(FinalSegment, 7))
+    msk2[choice] = 0
+    _, ddRMSE_detrend_Tissue = computeddRMSE(Y, X, msk2)
+
+    # Metric 4
+    '''msk2 = msk.copy()
+    choice = FinalSegment != 11
+    msk2[choice] = 0
+    _, ddRMSE_detrend_Blood = computeddRMSE(Y, X, msk2)'''
+    ddRMSE_detrend_Blood = 0.0
+
+    # Metric 5
+    msk2 = msk.copy()
+    choice = FinalSegment >= 7
+    msk2[choice] = 0
+    _, ddRMSE_detrend_DGM = computeddRMSE(Y, X, msk2)
+
+    # Metric 6
+    DGMmean_true_ds, DGMmean_recon = [], []
+    for tissue in range(1,7):
+        DGMmean_true_ds.append(np.mean(Y[FinalSegment == tissue]))
+        DGMmean_recon.append(np.mean(X[FinalSegment == tissue]))
+
+    P = np.polyfit(DGMmean_true_ds,DGMmean_recon, 1)
+    DGM_slope_ds = 1 * P[0]
+    deviationFromLinearSlope = abs(1-DGM_slope_ds)
+
+    # Metric 7
+    calcStreak = 0.0
+
+    # Metric 8
+    deviationFromCalcMoment = 0.0
+
+
+    return round(rmse, 4), round(ddRMSE_detrend, 4), round(ddRMSE_detrend_Tissue, 4), round(ddRMSE_detrend_Blood, 4), \
+            round(ddRMSE_detrend_DGM, 4), round(deviationFromLinearSlope, 4), round(calcStreak, 4), round(deviationFromCalcMoment, 4)

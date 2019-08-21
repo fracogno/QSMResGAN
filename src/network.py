@@ -29,10 +29,10 @@ def upsample(inputs, filters, size, apply_dropout=False):
     
     
     
-def getGenerator(X):
+def getGenerator(X, reuse=False):
     filters = [64, 128, 256, 512, 512, 512]
     
-    with tf.variable_scope('generator', reuse=tf.AUTO_REUSE):
+    with tf.variable_scope("generator", reuse=reuse):
         output = X
         print(output)
         skips = []

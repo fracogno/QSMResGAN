@@ -16,9 +16,9 @@ data_path = "data/shapes_shape64_ex2_2019_08_19"
 '''
     Parameters for training
 '''
-epochs = 100
+epochs = 3
 batch_size = 1
-lr = 0.0002
+lr = 0.0001
 beta1 = 0.5
 l1_weight = 100.0
 labelSmoothing = 0.9
@@ -43,6 +43,7 @@ X_tmp = X_val_nib.get_data()
 Y_tmp = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/GT/Chi.nii.gz")
 Y_val = Y_tmp.get_data()
 mask = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/MaskBrainExtracted.nii.gz").get_data()
+finalSegment = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/GT/Segmentation.nii.gz").get_data()
 
 # Rescale validation
 TEin_s = 8 / 1000
@@ -117,27 +118,39 @@ train_op = G_optimizer
 '''
     SUMMARIES - Create a list of summaries
 '''
-D_loss_summary = tf.summary.scalar('D_loss', D_loss)
-G_loss_summary = tf.summary.scalar('G_loss', G_gan)
-L1_loss_summary = tf.summary.scalar('L1_loss', G_L1)
+# Training
+train_summaries = [tf.summary.scalar('D_loss', D_loss), tf.summary.scalar('G_loss', G_gan), tf.summary.scalar('L1_loss', G_L1), \
+					tf.summary.image('input', X_tensor[:, :, :, int(input_shape[2]/2)], max_outputs=1), \
+					tf.summary.image('output', Y_generated[:, :, :, int(input_shape[2]/2)], max_outputs=1), \
+					tf.summary.image('ground_truth', Y_tensor[:, :, :, int(input_shape[2]/2)], max_outputs=1)]
 
-tf.summary.image('input', X_tensor[:, :, :, int(input_shape[2]/2)], max_outputs=1)
-tf.summary.image('output', Y_generated[:, :, :, int(input_shape[2]/2)], max_outputs=1)
-tf.summary.image('ground_truth', Y_tensor[:, :, :, int(input_shape[2]/2)], max_outputs=1)
+train_merged_summaries = tf.summary.merge(train_summaries)
 
-# MERGE SUMMARIES - Merge all summaries into a single op
-merged_summary_op = tf.summary.merge_all()
+# Validation
+rmseTensor = tf.placeholder(tf.float32, shape=())
+ddrmseTensor = tf.placeholder(tf.float32, shape=())
+ddrmseTissueTensor = tf.placeholder(tf.float32, shape=())
+ddrmseBloodTensor = tf.placeholder(tf.float32, shape=())
+ddrmseDGMTensor = tf.placeholder(tf.float32, shape=())
+deviationFromLinearSlopeTensor = tf.placeholder(tf.float32, shape=())
+calcStreakTensor = tf.placeholder(tf.float32, shape=())
+deviationFromCalcMomentTensor = tf.placeholder(tf.float32, shape=())
 
-# UNMERGED SUMMARIES
-avg_L1_loss = tf.placeholder(tf.float32, shape=())
-val_L1_summary = tf.summary.scalar('val_L1_loss', avg_L1_loss)
+val_summaries = [tf.summary.scalar('rmse', rmseTensor), tf.summary.scalar('ddrmse', ddrmseTensor), tf.summary.scalar('ddrmseTissue', ddrmseTissueTensor), \
+				 tf.summary.scalar('ddrmseBlood', ddrmseBloodTensor), tf.summary.scalar('ddrmseDGM', ddrmseDGMTensor), \
+				 tf.summary.scalar('deviationFromLinearSlope', deviationFromLinearSlopeTensor), tf.summary.scalar('calcStreak', calcStreakTensor), \
+				 tf.summary.scalar('deviationFromCalcMoment', deviationFromCalcMomentTensor)]
+val_merged_summaries = tf.summary.merge(val_summaries)
 
 # VISUALIZE => tensorboard --logdir=.
 summaries_dir = base_path + checkpointName
 
+# Array containing best metrics values
+bestValMetrics = [1e6] * len(util.getMetrics(Y_val, Y_val, mask, finalSegment))
+
 with tf.Session() as sess:
     # Initialize variables
-    saver = tf.train.Saver(max_to_keep=1)
+    saver = tf.train.Saver(max_to_keep=15)
     sess.run(tf.global_variables_initializer())
 
     # op to write logs to Tensorboard
@@ -149,7 +162,7 @@ with tf.Session() as sess:
         try:
             # Training step
             if global_step % 1 == 0:
-                _, summary = sess.run([train_op, merged_summary_op])
+                _, summary = sess.run([train_op, train_merged_summaries])
                 train_summary_writer.add_summary(summary, global_step)
             else:
                 sess.run(train_op)
@@ -157,7 +170,6 @@ with tf.Session() as sess:
             # Check validation accuracy
             if global_step % 1 == 0:
                 predicted = sess.run(Y_val_generated, feed_dict={ X_val_tensor : [np.expand_dims(X_val, axis=-1)] })
-                print(predicted.shape)
                 
                 #Remove paddings and if it was not even shape
                 predicted = predicted[0, val_X:-val_X, val_Y:-val_Y, val_Z:-val_Z, 0]
@@ -165,15 +177,26 @@ with tf.Session() as sess:
                 assert(predicted.shape[0] == mask.shape[0] and predicted.shape[1] == mask.shape[1] and predicted.shape[2] == mask.shape[2])
                 predicted = predicted * mask
 
-            ''' # Calculate metrics over validation and save it
-            	# METRICS ON predicted and Y_val
-                #acc_summary = sess.run(val_L1_summary, feed_dict={ avg_L1_loss: val_ddrmse })
-                #val_summary_writer.add_summary(acc_summary, global_step)
+                # Calculate metrics over validation and save it
+                metrics = util.getMetrics(Y_val, predicted, mask, finalSegment)
+                summary = sess.run(val_merged_summaries, feed_dict={ rmseTensor: metrics[0],
+                													 ddrmseTensor: metrics[1],
+                													 ddrmseTissueTensor: metrics[2],
+                													 ddrmseBloodTensor: metrics[3],
+                													 ddrmseDGMTensor: metrics[4],
+                													 deviationFromLinearSlopeTensor: metrics[5],
+                													 calcStreakTensor: metrics[6],
+                													 deviationFromCalcMomentTensor: metrics[7] })
+                val_summary_writer.add_summary(summary, global_step)
 
-                # If better accuracy, save it
-                if val_ddrmse < best_val_L1:
-                    best_val_L1 = val_ddrmse
-                    save_path = saver.save(sess, summaries_dir + "/model")'''
+                # Iterate over metrics
+                print(metrics)
+                for numMetric in range(len(metrics)):
+                    
+                    # If better value of metric, save it
+                    if metrics[numMetric] < bestValMetrics[numMetric]:
+                        bestValMetrics[numMetric] = metrics[numMetric]
+                        saver.save(sess, summaries_dir + "/model-metric" + str(numMetric))
             global_step += 1 
         except tf.errors.OutOfRangeError:
             break
