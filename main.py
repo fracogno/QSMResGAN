@@ -10,13 +10,12 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 # Paths
 base_path = "/scratch/cai/deepQSMGAN/"
-base_path = "/home/francesco/UQ/deepQSMGAN/"
-data_path = "data/shapes_shape64_ex2_2019_08_19"
+data_path = "data/shapes_shape64_ex100_2019_08_20_TEST"
 
 '''
     Parameters for training
 '''
-epochs = 3
+epochs = 2500
 batch_size = 1
 lr = 0.0001
 beta1 = 0.5
