@@ -2,20 +2,21 @@ import tensorflow as tf
 import numpy as np
 import datetime
 import os
-import scipy.io
-import network, utilities as util
+import nibabel as nib
+import src.network as network, src.utilities as util
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 # Paths
-base_path = "/scratch/cai/QSM-GAN/"
-data_path = "data/shapes_shape64_ex100_2018_10_18"
+base_path = "/scratch/cai/deepQSMGAN/"
+base_path = "/home/francesco/UQ/deepQSMGAN/"
+data_path = "data/shapes_shape64_ex2_2019_08_19"
 
 '''
     Parameters for training
 '''
-epochs = 1000
+epochs = 100
 batch_size = 1
 lr = 0.0002
 beta1 = 0.5
@@ -37,26 +38,39 @@ train_input_fn = util.data_input_fn(train_data_filename, p_shape=input_shape, ba
 X_tensor, Y_tensor, _ = train_input_fn()
 
 # Validation
-'''VAL_SIZE = 256
-X_val = scipy.io.loadmat("/scratch/cai/QSM-GAN/challenge/VALIDATION_forward.mat")["VALIDATION_forward"]
-msk = scipy.io.loadmat(base_path + "challenge/msk.mat")["msk"]
-X_val = X_val * msk
-Y_val = scipy.io.loadmat(base_path + "challenge/chi_33.mat")["chi_33"]	
-#X_val *= 10
+X_val_nib = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/Frequency.nii.gz")
+X_tmp = X_val_nib.get_data()
+Y_tmp = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/GT/Chi.nii.gz")
+Y_val = Y_tmp.get_data()
+mask = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/MaskBrainExtracted.nii.gz").get_data()
 
+# Rescale validation
+TEin_s = 8 / 1000
+frequency_rad = X_tmp * TEin_s * 2 * np.pi
+centre_freq = 297190802
+X_val_original = frequency_rad / (2 * np.pi * TEin_s * centre_freq) * 1e6
+print("X val original shape " + str(X_val_original.shape))
+
+# Add one if shape is not EVEN
+X_val = np.pad(X_val_original, [(int(X_val_original.shape[0] % 2 != 0), 0), (int(X_val_original.shape[1] % 2 != 0), 0), (int(X_val_original.shape[2] % 2 != 0), 0)],  'constant', constant_values=(0.0))
+print("X val evened shape " + str(X_val.shape))
+
+# Pad to multiple of 2^n
+VAL_SIZE = 256
+X_val_tensor = tf.placeholder(tf.float32, shape=[None, VAL_SIZE, VAL_SIZE, VAL_SIZE, 1], name='X_val')
 val_X = (VAL_SIZE - X_val.shape[0]) // 2
 val_Y = (VAL_SIZE - X_val.shape[1]) // 2
 val_Z = (VAL_SIZE - X_val.shape[2]) // 2
 X_val = np.pad(X_val, [(val_X, ), (val_Y, ), (val_Z, )],  'constant', constant_values=(0.0))
-print(X_val.shape)
-print(Y_val.shape)
-X_val_tensor = tf.placeholder(tf.float32, shape=[None, VAL_SIZE, VAL_SIZE, VAL_SIZE, 1], name='X_val')'''
+print("X val padded to 2^n multiple: " + str(X_val.shape))
+print("Y val: " + str(Y_val.shape))
+print("Mask shape: " + str(mask.shape))
 
 '''
     Define graphs for the networks
 '''
 Y_generated = network.getGenerator(X_tensor)    
-#Y_val_generated = network.getGenerator(X_val_tensor)
+Y_val_generated = network.getGenerator(X_val_tensor, True)
 
 D_logits_real = network.getDiscriminator(X_tensor, Y_tensor)
 D_logits_fake = network.getDiscriminator(X_tensor, Y_generated)
@@ -123,10 +137,9 @@ summaries_dir = base_path + checkpointName
 
 with tf.Session() as sess:
     # Initialize variables
-    best_val_L1 = 1e6
     saver = tf.train.Saver(max_to_keep=1)
     sess.run(tf.global_variables_initializer())
-    
+
     # op to write logs to Tensorboard
     train_summary_writer = tf.summary.FileWriter(summaries_dir + '/train', graph=tf.get_default_graph())
     val_summary_writer = tf.summary.FileWriter(summaries_dir + '/val')
@@ -135,26 +148,27 @@ with tf.Session() as sess:
     while True:
         try:
             # Training step
-            if global_step % 100 == 0:
+            if global_step % 1 == 0:
                 _, summary = sess.run([train_op, merged_summary_op])
                 train_summary_writer.add_summary(summary, global_step)
             else:
                 sess.run(train_op)
             
             # Check validation accuracy
-            '''if global_step % 2500 == 0:
-                Y_gen = sess.run(Y_val_generated, feed_dict={ X_val_tensor : [np.expand_dims(X_val, axis=-1)] })
+            if global_step % 1 == 0:
+                predicted = sess.run(Y_val_generated, feed_dict={ X_val_tensor : [np.expand_dims(X_val, axis=-1)] })
+                print(predicted.shape)
+                
+                #Remove paddings and if it was not even shape
+                predicted = predicted[0, val_X:-val_X, val_Y:-val_Y, val_Z:-val_Z, 0]
+                predicted = predicted[int(X_val_original.shape[0] % 2 != 0):, int(X_val_original.shape[1] % 2 != 0):, int(X_val_original.shape[2] % 2 != 0):]
+                assert(predicted.shape[0] == mask.shape[0] and predicted.shape[1] == mask.shape[1] and predicted.shape[2] == mask.shape[2])
+                predicted = predicted * mask
 
-                # Denormalize
-                #Y_gen /= 10
-
-                Y_gen = Y_gen[0, val_X:-val_X, val_Y:-val_Y, val_Z:-val_Z, 0]
-                assert(Y_gen.shape[0] == msk.shape[0] and Y_gen.shape[1] == msk.shape[1] and Y_gen.shape[2] == msk.shape[2])
-
-                # Calculate RMSE over validation and save it
-                val_ddrmse = util.computeddRMSE(Y_val, Y_gen, msk)
-                acc_summary = sess.run(val_L1_summary, feed_dict={ avg_L1_loss: val_ddrmse })
-                val_summary_writer.add_summary(acc_summary, global_step)
+            ''' # Calculate metrics over validation and save it
+            	# METRICS ON predicted and Y_val
+                #acc_summary = sess.run(val_L1_summary, feed_dict={ avg_L1_loss: val_ddrmse })
+                #val_summary_writer.add_summary(acc_summary, global_step)
 
                 # If better accuracy, save it
                 if val_ddrmse < best_val_L1:

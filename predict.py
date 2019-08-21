@@ -8,7 +8,6 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Parameters')
 parser.add_argument('--input_filename', type=str, help='Path to input file')
-parser.add_argument('--normalization', type=int, help='Apply normalization')
 parser.add_argument('--checkpoint', type=str, help='Path to checkpoint')
 args = parser.parse_args()
 
@@ -33,15 +32,6 @@ X = np.pad(X_original, [(int(X_original.shape[0] % 2 != 0), 0), (int(X_original.
 print(X.shape)
 
 Y = scipy.io.loadmat(base_path + "challenge/chi_33.mat")["chi_33"]
-
-# Normalize
-if args.normalization == 1:
-	X, phase_mean, phase_std = util.norm(X)
-elif args.normalization == 2:
-	X *= 10
-elif args.normalization != 0:
-	print("ERROR NORMALIZATION")
-	exit()
 
 # Add padding
 SIZE = 256
@@ -69,12 +59,6 @@ with tf.Session() as sess:
 	predicted = sess.run(Y_generated, feed_dict={X_tensor : [X]})
 
 	# De-normalize the raw output
-	if args.normalization == 1:
-		predicted = predicted + (3 * phase_mean)
-		predicted = predicted * (3 * phase_std)
-	elif args.normalization == 2:
-		predicted /= 10
-
 	assert(predicted.shape[0] == 1 and predicted.shape[-1] == 1)
 	predicted = predicted[0, val_X:-val_X, val_Y:-val_Y, val_Z:-val_Z, 0]
 	print(predicted.shape)
