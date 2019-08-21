@@ -1,6 +1,7 @@
 import os
 import tensorflow as tf
 import numpy as np
+import cv2
 
 def generate_file_list(file_path, p_shape):
     """
@@ -92,6 +93,14 @@ def computeddRMSE(true, fake, mask):
     return rmse, ddrmse
 
 
+def dilateMask(mask):
+    kernel = np.ones((3,3))
+    for i in range(mask.shape[-1]):
+        mask[:,:,i] = cv2.dilate(mask[:,:,i], kernel)
+
+    return mask
+
+
 def getMetrics(Y, X, msk, FinalSegment):
     # Metric 1 & 2
     rmse, ddRMSE_detrend = computeddRMSE(Y, X, msk)
@@ -103,11 +112,12 @@ def getMetrics(Y, X, msk, FinalSegment):
     _, ddRMSE_detrend_Tissue = computeddRMSE(Y, X, msk2)
 
     # Metric 4
-    '''msk2 = msk.copy()
+    msk2 = msk.copy()
     choice = FinalSegment != 11
     msk2[choice] = 0
-    _, ddRMSE_detrend_Blood = computeddRMSE(Y, X, msk2)'''
-    ddRMSE_detrend_Blood = 0.0
+    msk2 = dilateMask(msk2)
+    _, ddRMSE_detrend_Blood = computeddRMSE(Y, X, msk2)
+    #ddRMSE_detrend_Blood = 0.0
 
     # Metric 5
     msk2 = msk.copy()
