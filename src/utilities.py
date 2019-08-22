@@ -84,7 +84,10 @@ def computeddRMSE(true, fake, mask):
     rmse = 100 * np.linalg.norm( true_demean - fake_demean ) / np.linalg.norm(true_demean);
 
     # Detrend
-    P = np.polyfit(fake_demean, true_demean, 1)
+    P1 = np.polyfit(true_demean, fake_demean, 1)
+    P = [0, 0]
+    P[0] = 1 / P1[0]
+    P[1] = -P1[1] / P1[0]
     res = np.polyval(P, fake_demean)
 
     # RMSE
@@ -117,7 +120,7 @@ def getMetrics(Y, X, msk, FinalSegment):
     msk2[choice] = 0
     msk2 = dilateMask(msk2)
     _, ddRMSE_detrend_Blood = computeddRMSE(Y, X, msk2)
-    #ddRMSE_detrend_Blood = 0.0
+    ddRMSE_detrend_Blood = 0.0
 
     # Metric 5
     msk2 = msk.copy()
