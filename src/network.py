@@ -73,7 +73,7 @@ def getDiscriminator(X, Y):
 
         zero_pad1 = tf.keras.layers.ZeroPadding3D()(down2) 
         conv = tf.layers.conv3d(zero_pad1, 256, 4, strides=1, kernel_initializer=initializer, use_bias=False)
-        bn = tf.layers.batch_normalization(conv, training=True)
+        bn = tf.contrib.layers.batch_norm(conv, decay=0.9, is_training=True, updates_collections=None, epsilon=1e-5, scale=True)
         lrelu = tf.nn.leaky_relu(bn)
         print(lrelu)
 
