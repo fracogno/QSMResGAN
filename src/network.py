@@ -7,8 +7,9 @@ def downsample(inputs, filters, size, apply_batchnorm=True):
     result = tf.layers.conv3d(inputs, filters, size, strides=2, padding='SAME', use_bias=False, 
                               kernel_initializer=tf.random_normal_initializer(0., 0.02))
     
+    
     if apply_batchnorm:
-        result = tf.layers.batch_normalization(result, training=True)
+    	result = tf.contrib.layers.batch_norm(result, decay=0.9, is_training=True, updates_collections=None, epsilon=1e-5, scale=True)
         #result = tf.layers.batch_normalization(result, axis=4, epsilon=1e-5, momentum=0.1, training=True, gamma_initializer=tf.random_normal_initializer(1.0, 0.02))
 
     return tf.nn.leaky_relu(result)
@@ -19,7 +20,7 @@ def upsample(inputs, filters, size, apply_dropout=False):
     result = tf.layers.conv3d_transpose(inputs, filters, size, strides=2, padding='SAME', use_bias=False,
                                         kernel_initializer=tf.random_normal_initializer(0., 0.02))
     
-    result = tf.layers.batch_normalization(result, training=True)
+    result = tf.contrib.layers.batch_norm(result, decay=0.9, is_training=True, updates_collections=None, epsilon=1e-5, scale=True)
     #result = tf.layers.batch_normalization(result, axis=4, epsilon=1e-5, momentum=0.1, training=True, gamma_initializer=tf.random_normal_initializer(1.0, 0.02))
 
     if apply_dropout:

@@ -10,7 +10,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 # Paths
 base_path = "/scratch/cai/deepQSMGAN/"
-data_path = "data/shapes_shape64_ex100_2019_08_20_TEST"
+data_path = "data/shapes_shape64_ex100_2019_08_20"
 
 '''
     Parameters for training
@@ -103,15 +103,9 @@ G_loss, G_gan, G_L1 = generatorLoss(D_logits_fake, Y_generated, Y_tensor, l1_wei
 '''
     Optimizers for weights
 '''
-D_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope='discriminator')
-with tf.control_dependencies(D_update_ops):
-	D_optimizer = tf.train.AdamOptimizer(lr, beta1).minimize(D_loss, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='discriminator'))
-
-	with tf.control_dependencies([D_optimizer]):
-		G_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope='generator')
-
-		with tf.control_dependencies(G_update_ops):
-			G_optimizer = tf.train.AdamOptimizer(lr, beta1).minimize(G_loss, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='generator'))
+D_optimizer = tf.train.AdamOptimizer(lr, beta1).minimize(D_loss, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='discriminator'))
+with tf.control_dependencies([D_optimizer]):
+    G_optimizer = tf.train.AdamOptimizer(lr, beta1).minimize(G_loss, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='generator'))
 train_op = G_optimizer
 
 '''
@@ -160,14 +154,14 @@ with tf.Session() as sess:
     while True:
         try:
             # Training step
-            if global_step % 1 == 0:
+            if global_step % 100 == 0:
                 _, summary = sess.run([train_op, train_merged_summaries])
                 train_summary_writer.add_summary(summary, global_step)
             else:
                 sess.run(train_op)
             
             # Check validation accuracy
-            if global_step % 1 == 0:
+            if global_step % 250 == 0:
                 predicted = sess.run(Y_val_generated, feed_dict={ X_val_tensor : [np.expand_dims(X_val, axis=-1)] })
                 
                 #Remove paddings and if it was not even shape
