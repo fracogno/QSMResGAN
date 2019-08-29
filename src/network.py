@@ -49,7 +49,11 @@ def getGenerator(X, reuse=False):
             output = tf.concat([output, skip], axis=4)
             print(output)
 
-        last = tf.layers.conv3d_transpose(output, 1, 4, strides=2, padding='same', kernel_initializer=tf.random_normal_initializer(0., 0.02), activation=None)
+        output = upsample(output, filters[0], 4)
+        output = tf.concat([output, X], axis=4)
+        print(output)
+
+        last = tf.layers.conv3d(output, 1, 4, strides=1, padding='same', kernel_initializer=tf.random_normal_initializer(0., 0.02), activation=None)
         print(last)
 
         return last
