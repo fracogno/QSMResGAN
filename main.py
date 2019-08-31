@@ -12,7 +12,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 # Paths
 base_path = "/scratch/cai/deepQSMGAN/"
-data_path = "data/shapes_shape64_ex100_2019_08_20"
+data_path = "data/shapes_shape64_ex100_2019_08_30"
 
 '''
     Parameters for training
@@ -143,7 +143,9 @@ summaries_dir = base_path + checkpointName
 # Array containing best metrics values
 bestValMetrics = [1e6] * len(util.getMetrics(Y_val, Y_val, mask, finalSegment))
 
-with tf.Session() as sess:
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+with tf.Session(config=config) as sess:
     # Initialize variables
     saver = tf.train.Saver(max_to_keep=15)
     sess.run(tf.global_variables_initializer())
@@ -183,6 +185,7 @@ with tf.Session() as sess:
                 													 calcStreakTensor: metrics[6],
                 													 deviationFromCalcMomentTensor: metrics[7] })
                 val_summary_writer.add_summary(summary, global_step)
+                saver.save(sess, summaries_dir + "/model-save-always")
 
                 # Iterate over metrics
                 print(metrics)

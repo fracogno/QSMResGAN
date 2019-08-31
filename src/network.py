@@ -8,9 +8,9 @@ def downsample(inputs, filters, size, apply_batchnorm=True):
                               kernel_initializer=tf.random_normal_initializer(0., 0.02))
     
     
-    if apply_batchnorm:
-    	result = tf.contrib.layers.batch_norm(result, decay=0.9, is_training=True, updates_collections=None, epsilon=1e-5, scale=True)
-        #result = tf.layers.batch_normalization(result, axis=4, epsilon=1e-5, momentum=0.1, training=True, gamma_initializer=tf.random_normal_initializer(1.0, 0.02))
+    #if apply_batchnorm:
+    #result = tf.contrib.layers.batch_norm(result, decay=0.9, is_training=True, updates_collections=None, epsilon=1e-5, scale=True)
+    #result = tf.layers.batch_normalization(result, axis=4, epsilon=1e-5, momentum=0.1, training=True, gamma_initializer=tf.random_normal_initializer(1.0, 0.02))
 
     return tf.nn.leaky_relu(result)
 
@@ -20,7 +20,7 @@ def upsample(inputs, filters, size, apply_dropout=False):
     result = tf.layers.conv3d_transpose(inputs, filters, size, strides=2, padding='SAME', use_bias=False,
                                         kernel_initializer=tf.random_normal_initializer(0., 0.02))
     
-    result = tf.contrib.layers.batch_norm(result, decay=0.9, is_training=True, updates_collections=None, epsilon=1e-5, scale=True)
+    #result = tf.contrib.layers.batch_norm(result, decay=0.9, is_training=True, updates_collections=None, epsilon=1e-5, scale=True)
 
     if apply_dropout:
         result = tf.nn.dropout(result, keep_prob=0.5)
@@ -49,11 +49,11 @@ def getGenerator(X, reuse=False):
             output = tf.concat([output, skip], axis=4)
             print(output)
 
-        output = upsample(output, filters[0], 4)
-        output = tf.concat([output, X], axis=4)
-        print(output)
+        #output = upsample(output, 32, 4)
+        #output = tf.concat([output, X], axis=4)
+        #print(output)
 
-        last = tf.layers.conv3d(output, 1, 4, strides=1, padding='same', kernel_initializer=tf.random_normal_initializer(0., 0.02), activation=None)
+        last = tf.layers.conv3d_transpose(output, 1, 4, strides=2, padding='same', kernel_initializer=tf.random_normal_initializer(0., 0.02), activation=None)
         print(last)
 
         return last
@@ -76,8 +76,8 @@ def getDiscriminator(X, Y):
 
         zero_pad1 = tf.keras.layers.ZeroPadding3D()(down2) 
         conv = tf.layers.conv3d(zero_pad1, 256, 4, strides=1, kernel_initializer=initializer, use_bias=False)
-        bn = tf.contrib.layers.batch_norm(conv, decay=0.9, is_training=True, updates_collections=None, epsilon=1e-5, scale=True)
-        lrelu = tf.nn.leaky_relu(bn)
+        #bn = tf.contrib.layers.batch_norm(conv, decay=0.9, is_training=True, updates_collections=None, epsilon=1e-5, scale=True)
+        lrelu = tf.nn.leaky_relu(conv)
         print(lrelu)
 
         zero_pad2 = tf.keras.layers.ZeroPadding3D()(lrelu) 

@@ -6,7 +6,7 @@ import nibabel as nib
 
 # Paths
 base_path = "/scratch/cai/deepQSMGAN/"
-checkpoint_path = "ckp_2019827_110_shapes_shape64_ex100_2019_08_20/"
+checkpoint_path = "ckp_2019830_1719_shapes_shape64_ex100_2019_08_30/"
 
 # Validation
 X_val_nib = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/Frequency.nii.gz")
@@ -44,10 +44,14 @@ Y_generated = network.getGenerator(X_tensor)
 num_metrics = len(util.getMetrics(Y_val, Y_val, mask, finalSegment))
 with tf.Session() as sess:
 
-	for j in range(num_metrics):
+	for j in range(num_metrics+1):
 		saver = tf.train.Saver()
 		sess.run(tf.global_variables_initializer())
-		saver.restore(sess, base_path + checkpoint_path + "model-metric" + str(j))
+
+		if j != num_metrics:
+			saver.restore(sess, base_path + checkpoint_path + "model-metric" + str(j))
+		else:
+			saver.restore(sess, base_path + checkpoint_path + "model-save-always")
 
 		# Predict from network
 		predicted = sess.run(Y_generated, feed_dict={ X_tensor : [np.expand_dims(X_val, axis=-1)] })
