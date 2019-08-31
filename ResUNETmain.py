@@ -11,8 +11,8 @@ os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 # Paths
-base_path = "/home/francesco/UQ/deepQSMGAN/"
-data_path = "data/shapes_shape64_ex100_2019_08_20"
+base_path = "/scratch/cai/deepQSMGAN/"
+data_path = "data/shapes_shape64_ex100_2019_08_30"
 
 '''
     Parameters for training
@@ -72,7 +72,7 @@ print("Mask shape: " + str(mask.shape))
     Define graphs for the networks
 '''
 Y_generated = ResUNET.getGenerator(X_tensor)    
-Y_val_generated = ResUNET.getGenerator(X_val_tensor, True)
+#Y_val_generated = ResUNET.getGenerator(X_val_tensor, True)
 
 D_logits_real = ResUNET.getDiscriminator(X_tensor, Y_tensor)
 D_logits_fake = ResUNET.getDiscriminator(X_tensor, Y_generated, True)
@@ -147,7 +147,7 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 with tf.Session(config=config) as sess:
     # Initialize variables
-    saver = tf.train.Saver(max_to_keep=15)
+    saver = tf.train.Saver(max_to_keep=5000)
     sess.run(tf.global_variables_initializer())
 
     # op to write logs to Tensorboard
@@ -158,14 +158,14 @@ with tf.Session(config=config) as sess:
     while True:
         try:
             # Training step
-            if global_step % 100 == 0:
+            if global_step % 1000 == 0:
                 _, summary = sess.run([train_op, train_merged_summaries])
                 train_summary_writer.add_summary(summary, global_step)
             else:
                 sess.run(train_op)
             
             # Check validation accuracy
-            if global_step % 250 == 0:
+            '''if global_step % 250 == 0:
                 predicted = sess.run(Y_val_generated, feed_dict={ X_val_tensor : [np.expand_dims(X_val, axis=-1)] })
                 
                 #Remove paddings and if it was not even shape
@@ -193,8 +193,9 @@ with tf.Session(config=config) as sess:
                     
                     # If better value of metric, save it
                     if metrics[numMetric] < bestValMetrics[numMetric]:
-                        bestValMetrics[numMetric] = metrics[numMetric]
-                        saver.save(sess, summaries_dir + "/model-metric" + str(numMetric))
+                        bestValMetrics[numMetric] = metrics[numMetric]'''
+            if global_step % 1000 == 0:
+                saver.save(sess, summaries_dir + "/model-step-" + str(global_step))
             global_step += 1 
         except tf.errors.OutOfRangeError:
             break
