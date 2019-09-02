@@ -14,8 +14,8 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0"
 base_path = "/scratch/cai/deepQSMGAN/"
 data_path = "data/shapes_shape64_ex100_2019_08_30"
 
-base_path = "/home/francesco/UQ/deepQSMGAN/"
-data_path = "data/shapes_shape64_ex100_2019_08_20"
+#base_path = "/home/francesco/UQ/deepQSMGAN/"
+#data_path = "data/shapes_shape64_ex100_2019_08_20"
 
 # Parameters for training
 epochs = 2500
