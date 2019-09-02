@@ -14,6 +14,9 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0"
 base_path = "/scratch/cai/deepQSMGAN/"
 data_path = "data/shapes_shape64_ex100_2019_08_30"
 
+base_path = "/home/francesco/UQ/deepQSMGAN/"
+data_path = "data/shapes_shape64_ex100_2019_08_20"
+
 # Parameters for training
 epochs = 2500
 batch_size = 1
@@ -38,7 +41,6 @@ Y_generated = ResUNET.getGenerator(X_tensor)
 
 D_logits_real = ResUNET.getDiscriminator(X_tensor, Y_tensor)
 D_logits_fake = ResUNET.getDiscriminator(X_tensor, Y_generated, True)
-
 
 def discriminatorLoss(dis_real, dis_fake, smoothing=1.0):
     dis_real_ce = tf.nn.sigmoid_cross_entropy_with_logits(logits=dis_real, labels=tf.ones_like(dis_real) * smoothing)
@@ -92,7 +94,7 @@ with tf.Session(config=config) as sess:
     while True:
         try:
             # Training step
-            if global_step % 1000 == 0:
+            if global_step % 50 == 0:
                 _, summary = sess.run([train_op, train_merged_summaries])
                 train_summary_writer.add_summary(summary, global_step)
             else:

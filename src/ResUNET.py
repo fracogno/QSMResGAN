@@ -72,7 +72,7 @@ def getGenerator(X, reuse=False, kernelSize=4):
 
 
 def getDiscriminator(X, Y, reuse=False, kernelSize=4):
-	filters = [64, 128]
+	filters = [64, 128, 256]
 
 	with tf.variable_scope('discriminator', reuse=reuse):
 		output = tf.concat([X, Y], axis=-1)
@@ -81,12 +81,7 @@ def getDiscriminator(X, Y, reuse=False, kernelSize=4):
 		for numFilters in filters:
 			output = residualBlock(output, numFilters, 4, None)
 
-		conv = tf.layers.conv3d(output, 256, kernelSize, strides=1, use_bias=False, kernel_initializer='he_normal')
-		#bn = tf.contrib.layers.batch_norm(conv, decay=0.9, is_training=True, updates_collections=None, epsilon=1e-5, scale=True)
-		lrelu = tf.nn.leaky_relu(conv)
-		print(lrelu)
-
-		last = tf.layers.conv3d(lrelu, 1, kernelSize, 1, 'SAME', use_bias=False, kernel_initializer='he_normal')
+		last = tf.layers.conv3d(output, 1, kernelSize, 1, 'SAME', use_bias=False, kernel_initializer='he_normal')
 		print(last)
 
 		return last
