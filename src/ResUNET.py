@@ -9,38 +9,6 @@ def downsample(inputs):
 	return tf.nn.avg_pool3d(inputs, [1, 2, 2, 2, 1], [1, 2, 2, 2, 1], 'SAME')
 
 
-'''def residualBlock(inputs, numFilters, kernelSize, isTraining, encoding=True):
-	print(inputs)
-
-	# First part
-	conv1 = tf.layers.conv3d(inputs, numFilters, kernelSize, 1, 'SAME', use_bias=False, kernel_initializer='he_normal')
-	#bn1 = tf.layers.batch_normalization(conv1, training=isTraining)
-	relu1 = tf.nn.leaky_relu(conv1)
-	print(relu1)
-
-	# Second part
-	conv2 = tf.layers.conv3d(relu1, numFilters, kernelSize, 1, 'SAME', use_bias=False, kernel_initializer='he_normal')
-	#bn2 = tf.layers.batch_normalization(conv2, training=isTraining)
-	print(conv2)
-
-	# Concat
-	#skipConnection = tf.concat([inputs, conv2], axis=4)
-	skipConnection = inputs + conv2
-	reluSkip = tf.nn.leaky_relu(skipConnection)
-	print(reluSkip)
-
-	if encoding:
-		output = downsample(reluSkip)
-	else:
-		output = upsample(reluSkip)
-
-	print(output)
-	print()
-
-	return output'''
-
-
-
 def residualBlock(inputs, numFilters, kernelSize, isTraining, encoding=True):
 	print(inputs)
 	
