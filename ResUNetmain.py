@@ -14,10 +14,12 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0"
 base_path = "/scratch/cai/deepQSMGAN/"
 data_path = "data/shapes_shape64_ex100_2019_08_30"
 
-base_path = "/home/francesco/UQ/deepQSMGAN/"
-data_path = "data/shapes_shape64_ex100_2019_08_20"
+#base_path = "/home/francesco/UQ/deepQSMGAN/"
+#data_path = "data/shapes_shape64_ex100_2019_08_20"
 
-# Parameters for training
+'''
+    Parameters for training
+'''
 epochs = 2500
 batch_size = 1
 lr = 0.0001
@@ -30,18 +32,25 @@ tf.reset_default_graph()
 now = datetime.datetime.now()
 checkpointName = "ckp_" + str(now.year) + str(now.month) + str(now.day) + "_" + str(now.hour) + str(now.minute) + "_" + data_path.split("/")[-1]
 
-# Training data
+'''
+    Import data
+'''
 input_shape = (64, 64, 64, 1)
 train_data_filename = util.generate_file_list(file_path=base_path + data_path + "/train/", p_shape=input_shape)
 train_input_fn = util.data_input_fn(train_data_filename, p_shape=input_shape, batch=batch_size, nepochs=epochs, shuffle=True)
 X_tensor, Y_tensor, _ = train_input_fn()
 
-# Define graphs for the networks
+'''
+    Define graphs for the networks
+'''
 Y_generated = ResUNET.getGenerator(X_tensor)    
 
 D_logits_real = ResUNET.getDiscriminator(X_tensor, Y_tensor)
 D_logits_fake = ResUNET.getDiscriminator(X_tensor, Y_generated, True)
 
+'''
+    Loss functions
+'''
 def discriminatorLoss(dis_real, dis_fake, smoothing=1.0):
     dis_real_ce = tf.nn.sigmoid_cross_entropy_with_logits(logits=dis_real, labels=tf.ones_like(dis_real) * smoothing)
     dis_fake_ce = tf.nn.sigmoid_cross_entropy_with_logits(logits=dis_fake, labels=tf.zeros_like(dis_fake))
@@ -64,13 +73,17 @@ def generatorLoss(dis_fake, G_output, target, weight):
 D_loss = discriminatorLoss(D_logits_real, D_logits_fake, labelSmoothing)
 G_loss, G_gan, G_L1 = generatorLoss(D_logits_fake, Y_generated, Y_tensor, l1_weight)
 
-# Optimizers for weights
+'''
+    Optimizers for weights
+'''
 D_optimizer = tf.train.AdamOptimizer(lr, beta1).minimize(D_loss, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='discriminator'))
 with tf.control_dependencies([D_optimizer]):
     G_optimizer = tf.train.AdamOptimizer(lr, beta1).minimize(G_loss, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='generator'))
 train_op = G_optimizer
 
-# SUMMARIES - Create a list of summaries
+'''
+    SUMMARIES - Create a list of summaries
+'''
 train_summaries = [tf.summary.scalar('D_loss', D_loss), tf.summary.scalar('G_loss', G_gan), tf.summary.scalar('L1_loss', G_L1), \
 					tf.summary.image('input', X_tensor[:, :, :, int(input_shape[2]/2)], max_outputs=1), \
 					tf.summary.image('output', Y_generated[:, :, :, int(input_shape[2]/2)], max_outputs=1), \
@@ -89,6 +102,7 @@ with tf.Session(config=config) as sess:
 
     # op to write logs to Tensorboard
     train_summary_writer = tf.summary.FileWriter(summaries_dir + '/train', graph=tf.get_default_graph())
+    val_summary_writer = tf.summary.FileWriter(summaries_dir + '/val')
 
     global_step = 0
     while True:
@@ -99,7 +113,8 @@ with tf.Session(config=config) as sess:
                 train_summary_writer.add_summary(summary, global_step)
             else:
                 sess.run(train_op)
-
+            
+            # Check validation accuracy
             if global_step % 1000 == 0:
                 saver.save(sess, summaries_dir + "/model-step-" + str(global_step))
             global_step += 1 
