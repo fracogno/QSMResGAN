@@ -84,7 +84,7 @@ def residualBlockUp(inputs, numFilters, kernelSize, isTraining):
 	return output
 
 
-def getGenerator(X, reuse=False, kernelSize=4):
+def getGenerator(X, reuse=False, kernelSize=3):
 	filters = [64, 128, 256, 512, 512, 512]
 
 	with tf.variable_scope("generator", reuse=reuse):
@@ -93,19 +93,20 @@ def getGenerator(X, reuse=False, kernelSize=4):
 
 		# Encoder
 		skips = []
-		skips.append(output)
 		for numFilters in filters:
 			output = residualBlockDown(output, numFilters, kernelSize, None)
 			skips.append(output)
 
 		# Decoder
-		for numFilters, skip in zip(reversed(filters), reversed(skips[:-1])):
+		for numFilters, skip in zip(reversed(filters[:-1]), reversed(skips[:-1])):
 			output = residualBlockUp(output, numFilters, kernelSize, None)
 			output = tf.concat([output, skip], axis=4)
 
+		output = residualBlockUp(output, numFilters, kernelSize, None)
+		
 		last = tf.layers.conv3d(output, 1, kernelSize, 1, 'SAME', use_bias=False, kernel_initializer='he_normal')
 		print(last)
-
+		print("\n")
 		return last
 
 
