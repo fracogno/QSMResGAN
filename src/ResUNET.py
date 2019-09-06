@@ -28,42 +28,26 @@ def residualBlockDown(inputs, numFilters, kernelSize, isTraining):
 
 
 def residualBlockUp(inputs, numFilters, kernelSize, isTraining):
-	'''
-		First part
-	'''
-	#conv1 = tf.layers.conv3d(inputs, numFilters, kernelSize, 1, 'SAME')#, use_bias=False, kernel_initializer='he_normal')
+	''' First part '''
+	conv1 = tf.layers.conv3d_transpose(inputs, numFilters, kernelSize, 2, 'SAME')#, use_bias=False, kernel_initializer='he_normal')
 	#tf.layers.batch_normalization(conv1, training=isTraining)
-	#relu1 = tf.nn.leaky_relu(conv1)
-	#print(relu1)
+	relu1 = tf.nn.leaky_relu(conv1)
+	print(relu1)
 
-	#conv2 = tf.layers.conv3d(relu1, numFilters, kernelSize, 1, 'SAME')#, use_bias=False, kernel_initializer='he_normal')
-	#print(conv2)
-
-
+	conv2 = tf.layers.conv3d(relu1, numFilters, kernelSize, 1, 'SAME')#, use_bias=False, kernel_initializer='he_normal')
+	print(conv2)
 	
-	'''resizedConvInput = upsample(conv1, numFilters, kernelSize)
-	print(resizedConvInput)
-	
-	# Second part
-	
-	resizedInput = upsample(inputs, numFilters, kernelSize)
-	print(resizedInput)
-
-	#convInput = tf.layers.conv3d(resizedInput, numFilters, kernelSize, 1, 'SAME', use_bias=False, kernel_initializer='he_normal')
-	#tf.layers.batch_normalization(conv2, training=isTraining)
-	#print(convInput)
+	''' Second part '''
+	conv3 = tf.layers.conv3d_transpose(inputs, numFilters, kernelSize, 2, 'SAME')#, use_bias=False, kernel_initializer='he_normal')
+	#tf.layers.batch_normalization(conv3, training=isTraining)
+	print(conv3)
 
 	# Skip connection
-	output = resizedConvInput + resizedInput
+	output = conv2 + conv3
 	print(output)
 
 	output = tf.nn.leaky_relu(output)
-	print(str(output) + "\n")'''
-
-
-	conv1 = tf.layers.conv3d_transpose(inputs, numFilters, kernelSize, 2, 'SAME')#, use_bias=False, kernel_initializer='he_normal')
-	output = tf.nn.leaky_relu(conv1)
-	print(output)
+	print(str(output) + "\n")
 
 	return output
 
