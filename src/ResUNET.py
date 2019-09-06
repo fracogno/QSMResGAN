@@ -73,7 +73,7 @@ def getGenerator(X, reuse=False, kernelSize=3):
 
 		output = residualBlockUp(output, numFilters, kernelSize, None)
 		
-		last = tf.layers.conv3d(output, 1, kernelSize, 1, 'SAME', use_bias=False, kernel_initializer='he_normal')
+		last = tf.layers.conv3d(output, 1, kernelSize, 1, 'SAME')#, use_bias=False, kernel_initializer='he_normal')
 		print(last)
 		print("\n")
 		return last
@@ -89,7 +89,7 @@ def getDiscriminator(X, Y, reuse=False, kernelSize=4):
 		for numFilters in filters:
 			output = residualBlockDown(output, numFilters, 4, None)
 
-		last = tf.layers.conv3d(output, 1, kernelSize, 1, 'SAME', use_bias=False, kernel_initializer='he_normal')
+		last = tf.layers.conv3d(output, 1, kernelSize, 1, 'SAME')#, use_bias=False, kernel_initializer='he_normal')
 		print(last)
 
 		return last
