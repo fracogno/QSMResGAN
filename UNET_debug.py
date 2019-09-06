@@ -13,9 +13,6 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0"
 base_path = "/scratch/cai/deepQSMGAN/"
 data_path = "data/shapes_shape64_ex100_2019_08_30"
 
-base_path = "/home/francesco/UQ/deepQSMGAN/"
-data_path = "data/shapes_shape64_ex100_2019_08_20"
-
 now = datetime.datetime.now()
 checkpointName = "ckp_" + str(now.year) + str(now.month) + str(now.day) + "_" + str(now.hour) + str(now.minute) + "_" + data_path.split("/")[-1]
 
@@ -45,7 +42,7 @@ with tf.Session(config=config) as sess:
     global_step = 0
     while True:
         try:
-            _, summary = sess.run([train_op, train_merged_summaries])
+            _, summary = sess.run([optimizer, train_merged_summaries])
             train_summary_writer.add_summary(summary, global_step)
             global_step += 1 
         except tf.errors.OutOfRangeError:
