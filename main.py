@@ -4,7 +4,7 @@ import tensorflow as tf
 import numpy as np
 import datetime
 import nibabel as nib
-import src.network as network, src.utilities as util
+import src.ResUNET as network, src.utilities as util
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
@@ -75,7 +75,7 @@ Y_generated = network.getGenerator(X_tensor)
 Y_val_generated = network.getGenerator(X_val_tensor, True)
 
 D_logits_real = network.getDiscriminator(X_tensor, Y_tensor)
-D_logits_fake = network.getDiscriminator(X_tensor, Y_generated)
+D_logits_fake = network.getDiscriminator(X_tensor, Y_generated, True)
 
 '''
     Loss functions
