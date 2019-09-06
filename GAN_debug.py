@@ -16,8 +16,8 @@ beta1 = 0.5
 base_path = "/scratch/cai/deepQSMGAN/"
 data_path = "data/shapes_shape64_ex100_2019_08_30"
 
-base_path ="/home/francesco/UQ/deepQSMGAN/"
-data_path = "data/shapes_shape64_ex100_2019_08_20"
+#base_path ="/home/francesco/UQ/deepQSMGAN/"
+#data_path = "data/shapes_shape64_ex100_2019_08_20"
 
 now = datetime.datetime.now()
 checkpointName = "ckp_" + str(now.year) + str(now.month) + str(now.day) + "_" + str(now.hour) + str(now.minute) + "_" + data_path.split("/")[-1]
