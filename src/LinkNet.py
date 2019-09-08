@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-def convLayer(x, filters, kernelSize, stride, padding, use_bias, upsample=False):
+def convLayer(x, filters, kernelSize, stride, padding, use_bias, relu=True, upsample=False):
 
 	if not upsample:
 		x = tf.layers.conv3d(x, filters, kernelSize, stride, padding, use_bias=use_bias) #, kernel_initializer='he_normal')
@@ -9,7 +9,8 @@ def convLayer(x, filters, kernelSize, stride, padding, use_bias, upsample=False)
 		x = tf.layers.conv3d_transpose(x, filters, kernelSize, stride, padding, use_bias=use_bias) #, kernel_initializer='he_normal')
 
 	#x = tf.layers.batch_normalization(out, training=isTraining)
-	x = tf.nn.relu(x)
+	if relu:
+		x = tf.nn.relu(x)
 	print(x)
 
 	return x
@@ -18,21 +19,16 @@ def convLayer(x, filters, kernelSize, stride, padding, use_bias, upsample=False)
 def basicBlock(x, filters, kernelSize, stride, use_bias):
 	residual = x
 
-	out = convLayer(x, filters, kernelSize, stride, 'SAME', use_bias=use_bias) #, kernel_initializer='he_normal')
-
-	out = tf.layers.conv3d(out, filters, kernelSize, 1, 'SAME', use_bias=use_bias) #, kernel_initializer='he_normal')
-	#out = tf.layers.batch_normalization(out, training=isTraining)
-	print(out)
+	out = convLayer(x, filters, kernelSize, stride, 'SAME', use_bias=use_bias)
+	out = convLayer(out, filters, kernelSize, 1, 'SAME', use_bias=use_bias, relu=False)
 
 	if stride > 1:
-		residual = tf.layers.conv3d(x, filters, 1, stride, 'SAME', use_bias=use_bias) #, kernel_initializer='he_normal')
-		#residual = tf.layers.batch_normalization(residual, training=isTraining)
+		residual = convLayer(x, filters, 1, stride, 'SAME', use_bias=use_bias, relu=False)
 
 	# Skip connection
 	out += residual
 	print(out)
 
-	# Final activation
 	out = tf.nn.relu(out)
 	print(out)
 
@@ -49,7 +45,7 @@ def Encoder(x, filters, kernelSize, stride, use_bias):
 
 def Decoder(x, filters, kernelSize, stride, use_bias):
 	x = convLayer(x, filters//2, 1, 1, 'SAME', use_bias=use_bias) 
-	x = convLayer(x, filters//2, kernelSize, stride, 'SAME', use_bias=use_bias, upsample=True) # kernel_initializer='he_normal')
+	x = convLayer(x, filters//2, kernelSize, stride, 'SAME', use_bias=use_bias, upsample=True)
 	x = convLayer(x, filters, 1, 1, 'SAME', use_bias=use_bias)
 	print()
 
@@ -58,7 +54,7 @@ def Decoder(x, filters, kernelSize, stride, use_bias):
 
 def getGenerator(x, reuse=False, kernelSize=3, use_bias=False):
 	print(x)
-	############## TO DO : leaky relu, concat instead of ADD, remove one layer and put stride 2, kernel initial, BN
+	############## TO DO : leaky relu, concat instead of ADD, remove one layer and put stride 2, kernel initial, BN, bias=True
 
 	with tf.variable_scope("generator", reuse=reuse):
 		# Initial layer
