@@ -3,7 +3,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import numpy as np
 import datetime
-import src.ResUNET as network, src.utilities as util
+import src.LinkNet as network, src.utilities as util
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
@@ -12,6 +12,9 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0"
 # Paths
 base_path = "/scratch/cai/deepQSMGAN/"
 data_path = "data/shapes_shape64_ex100_2019_08_30"
+
+#base_path = "/home/francesco/UQ/deepQSMGAN/"
+#data_path = "data/shapes_shape64_ex100_2019_08_20"
 
 now = datetime.datetime.now()
 checkpointName = "ckp_" + str(now.year) + str(now.month) + str(now.day) + "_" + str(now.hour) + str(now.minute) + "_" + data_path.split("/")[-1]

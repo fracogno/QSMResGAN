@@ -4,7 +4,7 @@ import tensorflow as tf
 import numpy as np
 import datetime
 import nibabel as nib
-import src.ResUNET as network, src.utilities as util
+import src.LinkNet as network, src.utilities as util
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
