@@ -33,7 +33,9 @@ train_merged_summaries = tf.summary.merge(train_summaries)
 for i in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='generator'):
     print(i)
 # VISUALIZE => tensorboard --logdir=.
-summaries_dir = base_path + checkpointName
+summaries_dir = checkpointName
+
+print(summaries_dir)
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
