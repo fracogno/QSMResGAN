@@ -2,7 +2,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import tensorflow as tf
 import numpy as np
-import datetime
+from datetime import datetime
 import src.LinkNet as network, src.utilities as util
 
 tf.logging.set_verbosity(tf.logging.ERROR)
@@ -12,12 +12,10 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0"
 # Paths
 base_path = "/scratch/cai/deepQSMGAN/"
 data_path = "data/shapes_shape64_ex100_2019_08_30"
-
 #base_path = "/home/francesco/UQ/deepQSMGAN/"
 #data_path = "data/shapes_shape64_ex100_2019_08_20"
 
-now = datetime.datetime.now()
-checkpointName = "ckp_" + str(now.year) + str(now.month) + str(now.day) + "_" + str(now.hour) + str(now.minute) + "_" + data_path.split("/")[-1]
+checkpointName = base_path + "ckp_" + datetime.now().strftime("%Y%m%d_%H%M") + "_" + data_path.split("/")[-1]
 
 input_shape = (64, 64, 64, 1)
 train_data_filename = util.generate_file_list(file_path=base_path + data_path + "/train/", p_shape=input_shape)

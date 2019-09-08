@@ -54,7 +54,15 @@ def Decoder(x, filters, kernelSize, stride, use_bias):
 
 def getGenerator(x, reuse=False, kernelSize=3, use_bias=False):
 	print(x)
-	############## TO DO : leaky relu, concat instead of ADD, remove one layer and put stride 2, kernel initial, BN, bias=True
+	'''
+		TO DO : 
+			1 - leaky relu
+			2 - concat instead of ADD
+			3 - remove one layer and put stride 2
+			4 - kernel initial
+			5 - BN
+			6 - bias=True
+	'''
 
 	with tf.variable_scope("generator", reuse=reuse):
 		# Initial layer
