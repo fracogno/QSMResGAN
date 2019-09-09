@@ -78,11 +78,16 @@ def getGenerator(x, reuse=False, kernelSize=3, use_bias=False):
 		e5 = Encoder(e4, 512, kernelSize, 2, use_bias)
 
 		# Decoding
-		d5 = e4 + Decoder(e5, 512, kernelSize, 2, use_bias)
+		'''d5 = e4 + Decoder(e5, 512, kernelSize, 2, use_bias)
 		d4 = e3 + Decoder(d5, 256, kernelSize, 2, use_bias)
 		d3 = e2 + Decoder(d4, 128, kernelSize, 2, use_bias)
 		d2 = e1 + Decoder(d3, 64, kernelSize, 2, use_bias)
-		d1 = x + Decoder(d2, 64, kernelSize, 1, use_bias)
+		d1 = x + Decoder(d2, 64, kernelSize, 1, use_bias)'''
+		d5 = tf.concat([e4, Decoder(e5, 512, kernelSize, 2, use_bias)], 4)
+		d4 = tf.concat([e3, Decoder(d5, 256, kernelSize, 2, use_bias)], 4)
+		d3 = tf.concat([e2, Decoder(d4, 128, kernelSize, 2, use_bias)], 4)
+		d2 = tf.concat([e1, Decoder(d3, 64, kernelSize, 2, use_bias)], 4)
+		d1 = tf.concat([x, Decoder(d2, 64, kernelSize, 1, use_bias)], 4)
 
 		# Final layers
 		y = convLayer(d1, 32, kernelSize, 2, 'SAME', use_bias=use_bias, upsample=True)
@@ -93,17 +98,29 @@ def getGenerator(x, reuse=False, kernelSize=3, use_bias=False):
 		return last
 
 
-def getDiscriminator(X, Y, reuse=False, kernelSize=4):
+
+def getDiscriminator(X, Y, reuse=False, kernelSize=3, use_bias=False):
 	filters = [64, 128, 256]
 
 	with tf.variable_scope('discriminator', reuse=reuse):
-		output = tf.concat([X, Y], axis=-1)
-		print(output)
+		x = tf.concat([X, Y], axis=-1)
+		print(x)
 
+		'''x = convLayer(x, 64, 7, 1, 'SAME', use_bias=use_bias)
+		x = tf.layers.max_pooling3d(x, 3, 2, "SAME")
+		print(str(x) + "\n")
+
+		# Encoding
+		e1 = Encoder(x, 64, kernelSize, 1, use_bias)
+		e2 = Encoder(e1, 128, kernelSize, 2, use_bias)
+		e3 = Encoder(e2, 256, kernelSize, 2, use_bias)'''
 		for numFilters in filters:
-			output = residualBlockDown(output, numFilters, 4, None)
+			x = tf.nn.relu(tf.layers.conv3d(x, numFilters, kernelSize, 2, 'SAME'))
+			print(x)
+			x = tf.nn.relu(tf.layers.conv3d(x, numFilters, kernelSize, 1, 'SAME'))
+			print(x)
 
-		last = tf.layers.conv3d(output, 1, kernelSize, 1, 'SAME')#, use_bias=False, kernel_initializer='he_normal')
+		last = tf.layers.conv3d(x, 1, kernelSize, 1, 'SAME', use_bias=use_bias) #, kernel_initializer='he_normal')
 		print(last)
 
 		return last
