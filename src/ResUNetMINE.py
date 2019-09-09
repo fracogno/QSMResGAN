@@ -44,7 +44,15 @@ def block(x, filters, kernelSize, stride, use_bias, upsample=False):
 
 def getGenerator(x, reuse=False, kernelSize=3, use_bias=False):
 	print(x)
-
+	'''
+		TO DO : 
+			1 - leaky relu
+			2 - Add long skip conn
+			3 - Make it deeper
+			4 - kernel initial
+			5 - BN
+			6 - bias=True
+	'''
 	with tf.variable_scope("generator", reuse=reuse):
 
 		x = convLayer(x, 32, kernelSize, 1, "SAME", use_bias) # 64x64x32
