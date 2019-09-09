@@ -82,6 +82,6 @@ def getDiscriminator(X, Y, reuse=False, kernelSize=4, use_bias=False):
 		d3 = convLayer(d2, 128, kernelSize, 2, "SAME", use_bias, relu=False)
 		d4 = convLayer(d3, 256, kernelSize, 1, "SAME", use_bias, relu=False)
 		d5 = tf.layers.conv3d(d4, 1, kernelSize, 1, 'SAME', use_bias=use_bias) #, kernel_initializer='he_normal')
-		print(d5)
-		
+		print(str(d5) + "\n")
+
 		return d5
