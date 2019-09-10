@@ -14,8 +14,8 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0"
 base_path = "/scratch/cai/deepQSMGAN/"
 data_path = "data/shapes_shape64_ex100_2019_08_30"
 
-base_path ="/home/francesco/UQ/deepQSMGAN/"
-data_path = "data/shapes_shape64_ex100_2019_08_20"
+#base_path ="/home/francesco/UQ/deepQSMGAN/"
+#data_path = "data/shapes_shape64_ex100_2019_08_20"
 checkpointsPath = base_path + "ckp_" + datetime.now().strftime("%Y%m%d_%H%M") + "_" + data_path.split("/")[-1]
 
 # Parameters
