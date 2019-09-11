@@ -115,18 +115,18 @@ def getMetrics(Y, X, msk, FinalSegment):
     _, ddRMSE_detrend_Tissue = computeddRMSE(Y, X, msk2)
 
     # Metric 4
-    msk2 = msk.copy()
+    '''msk2 = msk.copy()
     choice = FinalSegment != 11
     msk2[choice] = 0
     msk2 = dilateMask(msk2)
     _, ddRMSE_detrend_Blood = computeddRMSE(Y, X, msk2)
-    #ddRMSE_detrend_Blood = 0.0
+    #ddRMSE_detrend_Blood = 0.0'''
 
     # Metric 5
-    '''msk2 = msk.copy()
+    msk2 = msk.copy()
     choice = FinalSegment >= 7
     msk2[choice] = 0
-    _, ddRMSE_detrend_DGM = computeddRMSE(Y, X, msk2)'''
+    _, ddRMSE_detrend_DGM = computeddRMSE(Y, X, msk2)
 
     # Metric 6
     DGMmean_true_ds, DGMmean_recon = [], []
