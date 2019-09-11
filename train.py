@@ -122,8 +122,11 @@ with tf.Session(config=config) as sess:
     while True:
         try:
             # Training step
-            _, summary = sess.run([optimizer, train_merged_summaries])
-            train_summary_writer.add_summary(summary, globalStep)
+            if globalStep % 250 == 0:
+                _, summary = sess.run([optimizer, train_merged_summaries])
+                train_summary_writer.add_summary(summary, globalStep)
+            else:
+                sess.run(optimizer)
 
             # Check validation accuracy
             if globalStep % 250 == 0:

@@ -1,12 +1,12 @@
 import tensorflow as tf
 import numpy as np
-import src.network as network, src.utilities as util
+import src.ResUNet as network, src.utilities as util
 import pickle
 import nibabel as nib
 
 # Paths
 base_path = "/scratch/cai/deepQSMGAN/"
-checkpoint_path = "ckp_2019830_1719_shapes_shape64_ex100_2019_08_30/"
+checkpoint_path = "ckp_20190910_1702_shapes_shape64_ex100_2019_08_30/"
 
 # Validation
 X_val_nib = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/Frequency.nii.gz")

@@ -63,10 +63,12 @@ def getGenerator(x, reuse=False, kernelSize=3, use_bias=False):
 		e3 = block(e2, 256, kernelSize, 2, use_bias) # 8x8x256
 
 		b1 = block(e3, 512, kernelSize, 1, use_bias) # 8x8x512
-		b2 = block(b1, 1024, kernelSize, 1, use_bias) # 8x8x1024
-		b3 = block(b2, 512, kernelSize, 1, use_bias) # 8x8x512
+		b2 = block(b1, 512, kernelSize, 1, use_bias) # 8x8x1024
+		b3 = block(b2, 1024, kernelSize, 1, use_bias) # 8x8x512
+		b4 = block(b3, 512, kernelSize, 1, use_bias)
+		b5 = block(b4, 512, kernelSize, 1, use_bias)
 
-		d3 = tf.concat([e2, block(b3, 256, kernelSize, 2, use_bias, upsample=True)], 4) # 16x16x128 (+) 16x16x256
+		d3 = tf.concat([e2, block(b5, 256, kernelSize, 2, use_bias, upsample=True)], 4) # 16x16x128 (+) 16x16x256
 		d2 = tf.concat([e1, block(d3, 128, kernelSize, 2, use_bias, upsample=True)], 4) # 32x32x64  (+) 32x32x128
 		#d1 = tf.concat([e1, block(d2, 64, kernelSize, 2, use_bias, upsample=True)], 4)
 		d1 = block(d2, 64, kernelSize, 2, use_bias, upsample=True) # 64x64x64
