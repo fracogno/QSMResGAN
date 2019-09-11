@@ -66,22 +66,16 @@ print("Mask shape: " + str(mask.shape))
 Y_generated = network.getGenerator(X_tensor)    
 Y_val_generated = network.getGenerator(X_val_tensor, True)
 
-D_logits_real = network.getDiscriminator(X_tensor, Y_tensor)
-D_logits_fake = network.getDiscriminator(X_tensor, Y_generated, True)
-
-# Losses and optimizer
-D_loss = loss.discriminatorLoss(D_logits_real, D_logits_fake, labelSmoothing)
-G_loss, G_gan, G_L1 = loss.generatorLoss(D_logits_fake, Y_generated, Y_tensor, L1_Weight)
-optimizer = loss.getOptimizer(lr, beta1, D_loss, G_loss)
+# Loss and optimizer
+loss = tf.reduce_mean(tf.abs(Y_tensor - Y_generated)) 
+optimizer = tf.train.AdamOptimizer(lr, beta1).minimize(loss, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='generator'))
 
 # Print variables
 for i in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='generator'):
     print(i)
-for i in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='discriminator'):
-    print(i)
 
 # Tensorboard
-train_summaries = [tf.summary.scalar('D_loss', D_loss), tf.summary.scalar('G_loss', G_gan), tf.summary.scalar('L1_loss', G_L1), \
+train_summaries = [tf.summary.scalar('loss', loss), \
                     tf.summary.image('input', X_tensor[:, :, :, int(input_shape[2]/2)], max_outputs=1), \
                     tf.summary.image('output', Y_generated[:, :, :, int(input_shape[2]/2)], max_outputs=1), \
                     tf.summary.image('ground_truth', Y_tensor[:, :, :, int(input_shape[2]/2)], max_outputs=1)]

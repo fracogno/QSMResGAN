@@ -123,10 +123,10 @@ def getMetrics(Y, X, msk, FinalSegment):
     #ddRMSE_detrend_Blood = 0.0
 
     # Metric 5
-    msk2 = msk.copy()
+    '''msk2 = msk.copy()
     choice = FinalSegment >= 7
     msk2[choice] = 0
-    _, ddRMSE_detrend_DGM = computeddRMSE(Y, X, msk2)
+    _, ddRMSE_detrend_DGM = computeddRMSE(Y, X, msk2)'''
 
     # Metric 6
     DGMmean_true_ds, DGMmean_recon = [], []
@@ -145,5 +145,4 @@ def getMetrics(Y, X, msk, FinalSegment):
     deviationFromCalcMoment = 0.0
 
 
-    return round(rmse, 4), round(ddRMSE_detrend, 4), round(ddRMSE_detrend_Tissue, 4), round(ddRMSE_detrend_Blood, 4), \
-            round(ddRMSE_detrend_DGM, 4), round(deviationFromLinearSlope, 4), round(calcStreak, 4), round(deviationFromCalcMoment, 4)
+    return round(rmse, 4), round(ddRMSE_detrend, 4), round(ddRMSE_detrend_Tissue, 4), round(ddRMSE_detrend_DGM, 4), round(deviationFromLinearSlope, 4)
