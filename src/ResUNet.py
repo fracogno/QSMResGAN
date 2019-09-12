@@ -4,9 +4,9 @@ import tensorflow as tf
 def convLayer(x, filters, kernelSize, stride, padding, use_bias, relu=True, bn=True, upsample=False):
 
 	if not upsample:
-		x = tf.layers.conv3d(x, filters, kernelSize, stride, padding, use_bias=use_bias) #, kernel_initializer='he_normal')
+		x = tf.layers.conv3d(x, filters, kernelSize, stride, padding, use_bias=use_bias, kernel_initializer='he_normal')
 	else:
-		x = tf.layers.conv3d_transpose(x, filters, kernelSize, stride, padding, use_bias=use_bias) #, kernel_initializer='he_normal')
+		x = tf.layers.conv3d_transpose(x, filters, kernelSize, stride, padding, use_bias=use_bias, kernel_initializer='he_normal')
 	print(x)
 	
 	# if bn:
@@ -73,7 +73,7 @@ def getGenerator(x, reuse=False, kernelSize=3, use_bias=False):
 		#d1 = tf.concat([e1, block(d2, 64, kernelSize, 2, use_bias, upsample=True)], 4)
 		d1 = block(d2, 64, kernelSize, 2, use_bias, upsample=True) # 64x64x64
 
-		x = tf.layers.conv3d(d1, 1, kernelSize, 1, "SAME", use_bias=use_bias) #, kernel_initializer='he_normal')
+		x = tf.layers.conv3d(d1, 1, kernelSize, 1, "SAME", use_bias=use_bias, kernel_initializer='he_normal')
 		print(str(x) + "\n")
 
 		return x
@@ -91,7 +91,7 @@ def getDiscriminator(X, Y, reuse=False, kernelSize=4, use_bias=False):
 		d2 = convLayer(d1, 64, kernelSize, 2, "SAME", use_bias, relu=False)
 		d3 = convLayer(d2, 128, kernelSize, 2, "SAME", use_bias, relu=False)
 		d4 = convLayer(d3, 256, kernelSize, 1, "SAME", use_bias, relu=False)
-		d5 = tf.layers.conv3d(d4, 1, kernelSize, 1, 'SAME', use_bias=use_bias) #, kernel_initializer='he_normal')
+		d5 = tf.layers.conv3d(d4, 1, kernelSize, 1, 'SAME', use_bias=use_bias, kernel_initializer='he_normal')
 		print(str(d5) + "\n")
 
 		return d5
