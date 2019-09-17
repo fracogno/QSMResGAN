@@ -20,7 +20,7 @@ checkpointsPath = base_path + "ckp_" + datetime.now().strftime("%Y%m%d_%H%M") + 
 
 # Parameters
 epochs = 3000
-batchSize = 1
+batchSize = 32
 lr = 1e-4
 beta1 = 0.5
 L1_Weight = 100.0
