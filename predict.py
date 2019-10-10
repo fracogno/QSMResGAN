@@ -6,7 +6,7 @@ import nibabel as nib
 
 # Paths
 base_path = "/scratch/cai/deepQSMGAN/"
-checkpoint_path = "ckp_20190912_1713_shapes_shape64_ex100_2019_08_30/"
+checkpoint_path = "ckp_20190927_2257_shapes_shape64_ex100_2019_08_30/"
 
 # Validation
 X_val_nib = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/Frequency.nii.gz")
