@@ -78,9 +78,12 @@ with tf.Session(config=config) as sess:
 
             # Check validation accuracy
             if globalStep % 250 == 0:
-                predicted = sess.run(Y_val_generated, feed_dict={ X_val_tensor : X_val_padded, is_train : False })
-                
-                predicted = utils.removePadding(predicted, originalShape, valuesSplit)
+                predicted = []
+                for i in range(len(X_val_padded)):
+                    singlePrediction = sess.run(Y_val_generated, feed_dict={ X_val_tensor : [X_val_padded[i]], is_train : False })
+                    predicted.append(singlePrediction[0])
+
+                predicted = utils.removePadding(np.array(predicted), originalShape, valuesSplit)
                 predicted = utils.applyMaskToVolume(predicted, mask_val)
                 assert(predicted.shape == Y_val.shape)
 
