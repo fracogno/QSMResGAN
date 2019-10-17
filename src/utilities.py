@@ -2,6 +2,7 @@ import os
 import tensorflow as tf
 import numpy as np
 import cv2
+import nibabel as nib
 
 def generate_file_list(file_path, p_shape):
     """
@@ -146,3 +147,55 @@ def getMetrics(Y, X, msk, FinalSegment):
 
 
     return round(rmse, 4), round(ddRMSE_detrend, 4), round(ddRMSE_detrend_Tissue, 4), round(ddRMSE_detrend_DGM, 4), round(deviationFromLinearSlope, 4)
+
+
+
+def loadChallengeData(path):
+
+    X, Y, mask = [], [], []
+    for sim in range(1,3):
+        for snr in range(1,3):
+
+            X.append(nib.load(path + "Sim" + str(sim) + "Snr" + str(snr) + "/Frequency.nii.gz").get_data())
+            Y.append(nib.load(path + "Sim" + str(sim) + "Snr" + str(snr) + "/GT/Chi.nii.gz").get_data())
+            mask.append(nib.load(path + "Sim" + str(sim) + "Snr" + str(snr) + "/MaskBrainExtracted.nii.gz").get_data())
+
+
+
+
+    return np.array(X), np.array(Y), np.array(mask)
+
+
+
+def saveNii(volume, path):
+    nib.save(nib.Nifti1Image(volume, np.eye(4)), path)
+
+
+
+def addPadding(volumes, size):
+
+    paddedVolumes = []
+    for volume in volumes:
+
+        # Add one if shape is not EVEN
+        padded = np.pad(volume, [(int(volume.shape[0] % 2 != 0), 0), (int(volume.shape[1] % 2 != 0), 0), (int(volume.shape[2] % 2 != 0), 0)],  'constant', constant_values=(0.0))
+
+        val_X = (size - padded.shape[0]) // 2
+        val_Y = (size - padded.shape[1]) // 2
+        val_Z = (size - padded.shape[2]) // 2
+        padded = np.pad(padded, [(val_X, ), (val_Y, ), (val_Z, )],  'constant', constant_values=(0.0))
+
+        paddedVolumes.append(padded)
+
+    return np.array(paddedVolumes), volumes[0].shape, (val_X, val_Y, val_Z)
+
+
+def removePadding(volumes, originalShape, values):
+
+    removedVolumes = []
+    for volume in volumes:
+        removed = volume[values[0]:-values[0], values[1]:-values[1], values[2]:-values[2]]
+        removed = removed[int(originalShape[0] % 2 != 0):, int(originalShape[1] % 2 != 0):, int(originalShape[2] % 2 != 0):]
+        removedVolumes.append(removed)
+
+    return np.array(removedVolumes)
