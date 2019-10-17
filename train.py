@@ -33,12 +33,12 @@ train_input_fn = util.data_input_fn(train_data_filename, p_shape=input_shape, ba
 X_tensor, Y_tensor, _ = train_input_fn()
 
 # Validation
-X_val_nib = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/Frequency.nii.gz")
+X_val_nib = nib.load(base_path + "data/QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/Frequency.nii.gz")
 X_tmp = X_val_nib.get_data()
-Y_tmp = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/GT/Chi.nii.gz")
+Y_tmp = nib.load(base_path + "data/QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/GT/Chi.nii.gz")
 Y_val = Y_tmp.get_data()
-mask = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/MaskBrainExtracted.nii.gz").get_data()
-finalSegment = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/GT/Segmentation.nii.gz").get_data()
+mask = nib.load(base_path + "data/QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/MaskBrainExtracted.nii.gz").get_data()
+finalSegment = nib.load(base_path + "data/QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/GT/Segmentation.nii.gz").get_data()
 
 # Rescale validation
 TEin_s = 8 / 1000
