@@ -105,7 +105,20 @@ def dilateMask(mask):
     return mask
 
 
-def getMetrics(Y, X, msk, FinalSegment):
+def getMetrics(Y, X, masks):
+    
+    allRmse, allddRmse = [], []
+    for i in range(len(X)):
+        rmse, ddRMSE_detrend = computeddRMSE(Y[i], X[i], masks[i])
+        allRmse.append(rmse)
+        allddRmse.append(ddRMSE_detrend)
+
+    allRmse, allddRmse = np.array(allRmse), np.array(allddRmse)
+
+    return np.mean(allRmse), np.mean(allddRmse)
+
+
+def getMetricsOLD(Y, X, msk, FinalSegment):
     # Metric 1 & 2
     rmse, ddRMSE_detrend = computeddRMSE(Y, X, msk)
 
@@ -156,14 +169,23 @@ def loadChallengeData(path):
     for sim in range(1,3):
         for snr in range(1,3):
 
-            X.append(nib.load(path + "Sim" + str(sim) + "Snr" + str(snr) + "/Frequency.nii.gz").get_data())
+            X_tmp = nib.load(path + "Sim" + str(sim) + "Snr" + str(snr) + "/Frequency.nii.gz").get_data()
+
+            # Rescale validation input of the network
+            TEin_s = 8 / 1000
+            frequency_rad = X_tmp * TEin_s * 2 * np.pi
+            centre_freq = 297190802
+            X_scaled = frequency_rad / (2 * np.pi * TEin_s * centre_freq) * 1e6
+
+            X.append(X_scaled)
             Y.append(nib.load(path + "Sim" + str(sim) + "Snr" + str(snr) + "/GT/Chi.nii.gz").get_data())
             mask.append(nib.load(path + "Sim" + str(sim) + "Snr" + str(snr) + "/MaskBrainExtracted.nii.gz").get_data())
 
 
+    X, Y, mask = np.array(X), np.array(Y), np.array(mask)
+    assert(X.shape == Y.shape and X.shape == mask.shape)
 
-
-    return np.array(X), np.array(Y), np.array(mask)
+    return X, Y, mask
 
 
 
@@ -185,9 +207,12 @@ def addPadding(volumes, size):
         val_Z = (size - padded.shape[2]) // 2
         padded = np.pad(padded, [(val_X, ), (val_Y, ), (val_Z, )],  'constant', constant_values=(0.0))
 
-        paddedVolumes.append(padded)
+        paddedVolumes.append(np.expand_dims(padded, axis=-1))
 
-    return np.array(paddedVolumes), volumes[0].shape, (val_X, val_Y, val_Z)
+    paddedVolumes = np.array(paddedVolumes)
+    assert(paddedVolumes.shape[1] == 256 and paddedVolumes.shape[2] == 256 and paddedVolumes.shape[3] == 256)
+
+    return paddedVolumes, volumes[0].shape, (val_X, val_Y, val_Z)
 
 
 def removePadding(volumes, originalShape, values):
@@ -195,7 +220,25 @@ def removePadding(volumes, originalShape, values):
     removedVolumes = []
     for volume in volumes:
         removed = volume[values[0]:-values[0], values[1]:-values[1], values[2]:-values[2]]
-        removed = removed[int(originalShape[0] % 2 != 0):, int(originalShape[1] % 2 != 0):, int(originalShape[2] % 2 != 0):]
+        removed = removed[int(originalShape[0] % 2 != 0):, int(originalShape[1] % 2 != 0):, int(originalShape[2] % 2 != 0):, 0]
         removedVolumes.append(removed)
 
     return np.array(removedVolumes)
+
+
+def applyMaskToVolume(volumes, masks):
+
+    for i in range(len(volumes)):
+        volumes[i] = volumes[i] * masks[i]
+
+    return volumes
+
+
+def getTrainingDataTF(path, batchSize, epochs):
+    input_shape = (64, 64, 64, 1)
+    train_data_filename = generate_file_list(file_path=path + "/train/", p_shape=input_shape)
+    train_input_fn = data_input_fn(train_data_filename, p_shape=input_shape, batch=batchSize, nepochs=epochs, shuffle=True)
+    X_tensor, Y_tensor, _ = train_input_fn()
+    assert(X_tensor.shape[1:] == Y_tensor.shape[1:])
+
+    return X_tensor, Y_tensor
