@@ -55,32 +55,10 @@ def getGenerator(x, reuse=False, kernelSize=3, use_bias=False):
 	'''
 	with tf.variable_scope("generator", reuse=reuse):
 
-		
-
 		x = convLayer(x, 32, kernelSize, 1, "SAME", use_bias) # 64x64x32
 		print()
 
-		filters = [64, 128, 256, 512]
-		skips = []
-		for numFilters in filters:
-			x = block(x, numFilters, kernelSize, 2, use_bias)
-			skips.append(x)
-
-		x = block(x, 512, kernelSize, 1, use_bias) # 4x4x512
-		x = block(x, 1024, kernelSize, 1, use_bias) # 4x4x1024
-		x = block(x, 512, kernelSize, 1, use_bias)  # 4x4x512
-		x = block(x, 512, kernelSize, 1, use_bias)	#4x4x512
-
-		skips = reversed(skips[:-1])
-		for numFilters, skip in zip(reversed(filters[:-1]), skips):
-			x = block(x, numFilters, kernelSize, 2, use_bias, upsample=True)
-			x = tf.concat([skip, x], 4)
-
-		x = block(x, 32, kernelSize, 2, use_bias, upsample=True) # 64x64x64
-		x = tf.layers.conv3d(x, 1, kernelSize, 1, "SAME", use_bias=use_bias, kernel_initializer='he_normal')
-		print(str(x) + "\n")
-
-		'''e1 = block(x, 64, kernelSize, 2, use_bias)	# 32x32x64
+		e1 = block(x, 64, kernelSize, 2, use_bias)	# 32x32x64
 		e2 = block(e1, 128, kernelSize, 2, use_bias) # 16x16x128
 		e3 = block(e2, 256, kernelSize, 2, use_bias) # 8x8x256
 
@@ -95,7 +73,8 @@ def getGenerator(x, reuse=False, kernelSize=3, use_bias=False):
 		#d1 = tf.concat([e1, block(d2, 64, kernelSize, 2, use_bias, upsample=True)], 4)
 		d1 = block(d2, 64, kernelSize, 2, use_bias, upsample=True) # 64x64x64
 
-		'''
+		x = tf.layers.conv3d(d1, 1, kernelSize, 1, "SAME", use_bias=use_bias, kernel_initializer='he_normal')
+		print(str(x) + "\n")
 
 		return x
 
