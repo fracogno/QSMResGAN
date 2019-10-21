@@ -1,71 +1,43 @@
 import tensorflow as tf
 import numpy as np
-import src.ResUNet as network, src.utilities as util
+import src.ResUNet as network, src.utilities as utils
 import pickle
 import nibabel as nib
 
 # Paths
-base_path = "/scratch/cai/deepQSMGAN/"
-checkpoint_path = "ckp_20190927_2257_shapes_shape64_ex100_2019_08_30/"
+basePath = "/scratch/cai/deepQSMGAN/"
+basePath ="/home/francesco/UQ/deepQSMGAN/"
+checkpointPath = "ckp_20191017_2348_shapes_shape64_ex100_2019_08_30/"
 
-# Validation
-X_val_nib = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/Frequency.nii.gz")
-X_tmp = X_val_nib.get_data()
-Y_tmp = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/GT/Chi.nii.gz")
-Y_val = Y_tmp.get_data()
-mask = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/MaskBrainExtracted.nii.gz").get_data()
-finalSegment = nib.load(base_path + "QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/GT/Segmentation.nii.gz").get_data()
-
-# Rescale validation
-TEin_s = 8 / 1000
-frequency_rad = X_tmp * TEin_s * 2 * np.pi
-centre_freq = 297190802
-X_val_original = frequency_rad / (2 * np.pi * TEin_s * centre_freq) * 1e6
-print("X val original shape " + str(X_val_original.shape))
-
-# Add one if shape is not EVEN
-X_val = np.pad(X_val_original, [(int(X_val_original.shape[0] % 2 != 0), 0), (int(X_val_original.shape[1] % 2 != 0), 0), (int(X_val_original.shape[2] % 2 != 0), 0)],  'constant', constant_values=(0.0))
-print("X val evened shape " + str(X_val.shape))
-
-# Pad to multiple of 2^n
-VAL_SIZE = 256
-X_tensor = tf.placeholder(tf.float32, shape=[None, VAL_SIZE, VAL_SIZE, VAL_SIZE, 1], name='X_val')
-val_X = (VAL_SIZE - X_val.shape[0]) // 2
-val_Y = (VAL_SIZE - X_val.shape[1]) // 2
-val_Z = (VAL_SIZE - X_val.shape[2]) // 2
-X_val = np.pad(X_val, [(val_X, ), (val_Y, ), (val_Z, )],  'constant', constant_values=(0.0))
-print("X val padded to 2^n multiple: " + str(X_val.shape))
-print("Y val: " + str(Y_val.shape))
-print("Mask shape: " + str(mask.shape))
+# Get data
+X, Y, masks = utils.loadChallengeData(basePath + "data/QSM_Challenge2_download_stage2/DatasetsStep2/")
+X_padded, originalShape, valuesSplit = utils.addPadding(X, 256)
+X_tensor = tf.placeholder(tf.float32, shape=[None, X_padded.shape[1], X_padded.shape[2], X_padded.shape[3], X_padded.shape[4]])
+is_train = tf.placeholder(tf.bool, name='is_train')
 
 # Network
 Y_generated = network.getGenerator(X_tensor)    
 
-num_metrics = len(util.getMetrics(Y_val, Y_val, mask, finalSegment))
+num_metrics = len(utils.getMetrics(Y, X, masks))
 with tf.Session() as sess:
 
-	for j in range(num_metrics+1):
+	for i in range(num_metrics):
 		saver = tf.train.Saver()
 		sess.run(tf.global_variables_initializer())
-
-		if j != num_metrics:
-			saver.restore(sess, base_path + checkpoint_path + "model-metric" + str(j))
-		else:
-			saver.restore(sess, base_path + checkpoint_path + "model-save-always")
-
+		saver.restore(sess, basePath + checkpointPath + "model-metric" + str(i))
+		
 		# Predict from network
-		predicted = sess.run(Y_generated, feed_dict={ X_tensor : [np.expand_dims(X_val, axis=-1)] })
+		predicted = []
+		for i in range(len(X_padded)):
+			singlePrediction = sess.run(Y_generated, feed_dict={ X_tensor : [X_padded[i]], is_train : False })
+			predicted.append(singlePrediction[0])
 
-		#Remove paddings and if it was not even shape
-		predicted = predicted[0, val_X:-val_X, val_Y:-val_Y, val_Z:-val_Z, 0]
-		predicted = predicted[int(X_val_original.shape[0] % 2 != 0):, int(X_val_original.shape[1] % 2 != 0):, int(X_val_original.shape[2] % 2 != 0):]
-		assert(predicted.shape[0] == mask.shape[0] and predicted.shape[1] == mask.shape[1] and predicted.shape[2] == mask.shape[2])
-		predicted = predicted * mask
+		predicted = utils.removePadding(np.array(predicted), originalShape, valuesSplit)
+		predicted = utils.applyMaskToVolume(predicted, masks)
 
 		# Calculate metrics over validation and save it
-		metrics = util.getMetrics(Y_val, predicted, mask, finalSegment)
+		metrics = utils.getMetrics(Y, predicted, masks)
 		print(metrics)
 
-		# Save NII
-		masked_img = nib.Nifti1Image(predicted, np.eye(4))
-		nib.save(masked_img, base_path + "result-metric" + str(j) + ".nii")
+		for j in range(len(predicted)):
+			utils.saveNii(predicted[j], basePath + "data/deepQSMResGAN/out-metric" + str(i) + "-vol-" + str(j))
