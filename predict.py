@@ -6,7 +6,7 @@ import nibabel as nib
 
 # Paths
 basePath = "/scratch/cai/deepQSMGAN/"
-basePath ="/home/francesco/UQ/deepQSMGAN/"
+#basePath ="/home/francesco/UQ/deepQSMGAN/"
 checkpointPath = "ckp_20191017_2348_shapes_shape64_ex100_2019_08_30/"
 
 # Get data
