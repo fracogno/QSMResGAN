@@ -8,6 +8,7 @@ import nibabel as nib
 basePath = "/scratch/cai/deepQSMGAN/"
 #basePath ="/home/francesco/UQ/deepQSMGAN/"
 checkpointPath = "ckp_20191017_2348_shapes_shape64_ex100_2019_08_30/"
+checkpointPath = "ckp_20191022_1335_shapes_shape64_ex100_2019_08_30/"
 
 # Get data
 X, Y, masks = utils.loadChallengeData(basePath + "data/QSM_Challenge2_download_stage2/DatasetsStep2/")
