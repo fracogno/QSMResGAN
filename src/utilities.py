@@ -163,7 +163,7 @@ def getMetricsOLD(Y, X, msk, FinalSegment):
 
 
 
-def loadChallengeData(path):
+def loadChallengeData(path, normalize=True):
 
     X, Y, mask = [], [], []
     for sim in range(1,3):
@@ -171,11 +171,14 @@ def loadChallengeData(path):
 
             X_tmp = nib.load(path + "Sim" + str(sim) + "Snr" + str(snr) + "/Frequency.nii.gz").get_data()
 
-            # Rescale validation input of the network
-            TEin_s = 8 / 1000
-            frequency_rad = X_tmp * TEin_s * 2 * np.pi
-            centre_freq = 297190802
-            X_scaled = frequency_rad / (2 * np.pi * TEin_s * centre_freq) * 1e6
+            if normalize:
+                # Rescale validation input of the network
+                TEin_s = 8 / 1000
+                frequency_rad = X_tmp * TEin_s * 2 * np.pi
+                centre_freq = 297190802
+                X_scaled = frequency_rad / (2 * np.pi * TEin_s * centre_freq) * 1e6
+            else:
+                X_scaled = X_tmp
 
             X.append(X_scaled)
             Y.append(nib.load(path + "Sim" + str(sim) + "Snr" + str(snr) + "/GT/Chi.nii.gz").get_data())

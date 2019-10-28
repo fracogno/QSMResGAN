@@ -28,8 +28,8 @@ with tf.Session() as sess:
 		
 		# Predict from network
 		predicted = []
-		for i in range(len(X_padded)):
-			singlePrediction = sess.run(Y_generated, feed_dict={ X_tensor : [X_padded[i]], is_train : False })
+		for k in range(len(X_padded)):
+			singlePrediction = sess.run(Y_generated, feed_dict={ X_tensor : [X_padded[k]], is_train : False })
 			predicted.append(singlePrediction[0])
 
 		predicted = utils.removePadding(np.array(predicted), originalShape, valuesSplit)
