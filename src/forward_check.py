@@ -41,7 +41,7 @@ def forward_sample(chi_sample, kernel):
 
     return tissue_phase
 
-
+'''
 # Loading data
 X = nib.load("/home/francesco/Downloads/QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/Frequency.nii.gz").get_data()
 chi = nib.load("/home/francesco/Downloads/QSM_Challenge2_download_stage2/DatasetsStep2/Sim2Snr2/GT/Chi.nii.gz").get_data()
@@ -67,4 +67,4 @@ plt.imshow(frequency[:,:,X.shape[2]//2], cmap="gray")
 plt.show()
 
 plt.imshow(X[:,:,X.shape[2]//2], cmap="gray")
-plt.show()
+plt.show()'''

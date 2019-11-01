@@ -191,6 +191,28 @@ def loadChallengeData(path, normalize=True):
     return X, Y, mask
 
 
+def loadChallengeOneData(path):
+    X, Y, mask = [], [], []
+
+    for i in range(4):
+        mask.append(nib.load(path + "msk.nii.gz").get_data())
+
+        X_tmp = nib.load(path + "phs_tissue.nii.gz").get_data()
+        if i < 2:
+            TEin_s = 8 / 1000
+            frequency_rad = X_tmp * TEin_s * 2 * np.pi
+            centre_freq = 297190802
+            X_tmp = frequency_rad / (2 * np.pi * TEin_s * centre_freq) * 1e6
+        X.append(X_tmp)
+    
+    Y.append(nib.load(path + "chi_33.nii.gz").get_data())
+    Y.append(nib.load(path + "chi_cosmos.nii.gz").get_data())
+    Y.append(nib.load(path + "chi_33.nii.gz").get_data())
+    Y.append(nib.load(path + "chi_cosmos.nii.gz").get_data())
+
+    return np.array(X), np.array(Y), np.array(mask)
+
+
 
 def saveNii(volume, path):
     nib.save(nib.Nifti1Image(volume, np.eye(4)), path)
@@ -213,7 +235,7 @@ def addPadding(volumes, size):
         paddedVolumes.append(np.expand_dims(padded, axis=-1))
 
     paddedVolumes = np.array(paddedVolumes)
-    assert(paddedVolumes.shape[1] == 256 and paddedVolumes.shape[2] == 256 and paddedVolumes.shape[3] == 256)
+    assert(paddedVolumes.shape[1] == size and paddedVolumes.shape[2] == size and paddedVolumes.shape[3] == size)
 
     return paddedVolumes, volumes[0].shape, (val_X, val_Y, val_Z)
 
