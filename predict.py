@@ -10,16 +10,18 @@ basePath = "/scratch/cai/deepQSMGAN/"
 checkpointPath = "ckp_20191022_1335_shapes_shape64_ex100_2019_08_30/"
 
 # Get data
-X, Y, masks = utils.loadChallengeData(basePath + "data/QSM_Challenge2_download_stage2/DatasetsStep2/")
+#X, Y, masks = utils.loadChallengeData(basePath + "data/QSM_Challenge2_download_stage2/DatasetsStep2/")
 #X, Y, masks = utils.loadChallengeOneData(basePath + "data/20170327_qsm2016_recon_challenge/data/")
-X_padded, originalShape, valuesSplit = utils.addPadding(X, 256)
+X, masks, names = utils.loadRealData()
+X_padded, originalShape, valuesSplit = utils.addPadding(X, 384)
 X_tensor = tf.placeholder(tf.float32, shape=[None, X_padded.shape[1], X_padded.shape[2], X_padded.shape[3], X_padded.shape[4]])
 is_train = tf.placeholder(tf.bool, name='is_train')
 
 # Network
 Y_generated = network.getGenerator(X_tensor)    
 
-num_metrics = len(utils.getMetrics(Y, X, masks))
+#num_metrics = len(utils.getMetrics(Y, X, masks))
+num_metrics = 1
 with tf.Session() as sess:
 
 	for i in range(num_metrics):
@@ -37,8 +39,8 @@ with tf.Session() as sess:
 		predicted = utils.applyMaskToVolume(predicted, masks)
 
 		# Calculate metrics over validation and save it
-		metrics = utils.getMetrics(Y, predicted, masks)
-		print(metrics)
+		#metrics = utils.getMetrics(Y, predicted, masks)
+		#print(metrics)
 
-		for j in range(len(predicted)):
-			utils.saveNii(predicted[j], basePath + "data/deepQSMResGAN/out-metric" + str(i) + "-vol-" + str(j))
+		#for j in range(len(predicted)):
+		#	utils.saveNii(predicted[j], basePath + "data/deepQSMResGAN/out-metric" + str(i) + "-vol-" + str(j))

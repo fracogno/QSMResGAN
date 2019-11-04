@@ -3,6 +3,8 @@ import tensorflow as tf
 import numpy as np
 import cv2
 import nibabel as nib
+import glob
+
 
 def generate_file_list(file_path, p_shape):
     """
@@ -267,3 +269,32 @@ def getTrainingDataTF(path, batchSize, epochs):
     assert(X_tensor.shape[1:] == Y_tensor.shape[1:])
 
     return X_tensor, Y_tensor
+
+
+def loadRealData():
+    basePath = "/scratch/cai/deepQSMGAN/data/realData/"
+    maskPath = "cut_magnitude_file_mask/"
+
+    X, masks, names = [], [], []
+
+    for folder in glob.glob(basePath + maskPath + "*"):
+        for folder2 in glob.glob(folder + "/*"):
+            for filename in glob.glob(folder2 + "/*"):
+                date = folder.split("/")[-1]
+                number = folder2.split("node")[-1]
+                echo = (filename.split("/")[-1]).split("_")[3]
+
+                mask = nib.load(filename).get_data()
+                phase = nib.load(basePath + "cut_phase/" + date + "/_cutPhs_node" + str(number) + "/p_composer_echo_"+str(echo)+"_roi_TissuePhase_scaledTOPPM.nii").get_data()
+                assert(mask.shape == phase.shape)
+                X.append(phase)
+                masks.append(mask)
+                names.append(basePath + "cut_phase/" + date + "/_cutPhs_node" + str(number) + "/p_composer_echo_"+str(echo)+"_roi_TissuePhase_scaledTOPPM.nii")
+        break
+
+    X = np.array(X)
+    masks = np.array(masks)
+    print(X.shape)
+    print(masks.shape)
+
+    return X, masks, names
