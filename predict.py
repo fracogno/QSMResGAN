@@ -13,7 +13,7 @@ checkpointPath = "ckp_20191022_1335_shapes_shape64_ex100_2019_08_30/"
 #X, Y, masks = utils.loadChallengeData(basePath + "data/QSM_Challenge2_download_stage2/DatasetsStep2/")
 #X, Y, masks = utils.loadChallengeOneData(basePath + "data/20170327_qsm2016_recon_challenge/data/")
 X, masks, names = utils.loadRealData()
-X_padded, originalShape, valuesSplit = utils.addPadding(X, 384)
+X_padded, originalShape, valuesSplit = utils.addPadding(X, (256, 320, 192))
 X_tensor = tf.placeholder(tf.float32, shape=[None, X_padded.shape[1], X_padded.shape[2], X_padded.shape[3], X_padded.shape[4]])
 is_train = tf.placeholder(tf.bool, name='is_train')
 

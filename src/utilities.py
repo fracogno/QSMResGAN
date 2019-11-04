@@ -229,15 +229,15 @@ def addPadding(volumes, size):
         # Add one if shape is not EVEN
         padded = np.pad(volume, [(int(volume.shape[0] % 2 != 0), 0), (int(volume.shape[1] % 2 != 0), 0), (int(volume.shape[2] % 2 != 0), 0)],  'constant', constant_values=(0.0))
 
-        val_X = (size - padded.shape[0]) // 2
-        val_Y = (size - padded.shape[1]) // 2
-        val_Z = (size - padded.shape[2]) // 2
+        val_X = (size[0] - padded.shape[0]) // 2
+        val_Y = (size[1] - padded.shape[1]) // 2
+        val_Z = (size[2] - padded.shape[2]) // 2
         padded = np.pad(padded, [(val_X, ), (val_Y, ), (val_Z, )],  'constant', constant_values=(0.0))
 
         paddedVolumes.append(np.expand_dims(padded, axis=-1))
 
     paddedVolumes = np.array(paddedVolumes)
-    assert(paddedVolumes.shape[1] == size and paddedVolumes.shape[2] == size and paddedVolumes.shape[3] == size)
+    assert(paddedVolumes.shape[1] == size[0] and paddedVolumes.shape[2] == size[1] and paddedVolumes.shape[3] == size[2])
 
     return paddedVolumes, volumes[0].shape, (val_X, val_Y, val_Z)
 
@@ -273,6 +273,7 @@ def getTrainingDataTF(path, batchSize, epochs):
 
 def loadRealData():
     basePath = "/scratch/cai/deepQSMGAN/data/realData/"
+    #basePath = "/home/francesco/UQ/deepQSMGAN/data/realData/"
     maskPath = "cut_magnitude_file_mask/"
 
     X, masks, names = [], [], []
