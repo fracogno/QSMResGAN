@@ -272,30 +272,30 @@ def getTrainingDataTF(path, batchSize, epochs):
 
 
 def loadRealData():
-    basePath = "/scratch/cai/deepQSMGAN/data/realData/"
-    #basePath = "/home/francesco/UQ/deepQSMGAN/data/realData/"
-    maskPath = "cut_magnitude_file_mask/"
+	basePath = "/scratch/cai/deepQSMGAN/data/realData/"
+	#basePath = "/home/francesco/UQ/deepQSMGAN/data/realData/"
+	maskPath = "cut_phase/"
 
-    X, masks, names = [], [], []
+	X, masks, names = [], [], []
 
-    for folder in glob.glob(basePath + maskPath + "*"):
-        for folder2 in glob.glob(folder + "/*"):
-            for filename in glob.glob(folder2 + "/*"):
-                date = folder.split("/")[-1]
-                number = folder2.split("node")[-1]
-                echo = (filename.split("/")[-1]).split("_")[3]
+	for folder in glob.glob(basePath + maskPath + "*"):
+		for folder2 in glob.glob(folder + "/*"):
+			phaseName = glob.glob(folder2 + "/*scaledTOPPM.nii")
+			assert(len(phaseName) == 1)
+			phase = nib.load(phaseName[0]).get_data()
+			
+			mask = nib.load(folder2 + "/eroded_mask.nii").get_data()
+			assert(mask.shape == phase.shape)
+			X.append(phase)
+			masks.append(mask)
+			names.append(phaseName[0])
 
-                mask = nib.load(filename).get_data()
-                phase = nib.load(basePath + "cut_phase/" + date + "/_cutPhs_node" + str(number) + "/p_composer_echo_"+str(echo)+"_roi_TissuePhase_scaledTOPPM.nii").get_data()
-                assert(mask.shape == phase.shape)
-                X.append(phase)
-                masks.append(mask)
-                names.append(basePath + "cut_phase/" + date + "/_cutPhs_node" + str(number) + "/p_composer_echo_"+str(echo)+"_roi_TissuePhase_scaledTOPPM.nii")
-        break
+		if len(X) > 30:
+			break
 
-    X = np.array(X)
-    masks = np.array(masks)
-    print(X.shape)
-    print(masks.shape)
+	X = np.array(X)
+	masks = np.array(masks)
+	print(X.shape)
+	print(masks.shape)
 
-    return X, masks, names
+	return X, masks, names
