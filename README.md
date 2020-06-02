@@ -1,2 +1,2 @@
-# deepQSMGAN
-QSM challenge 2019
+# QSMResGAN
+ISMRM 2020 accepted abstract
