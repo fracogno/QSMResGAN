@@ -45,4 +45,4 @@ class Generator(base_cnn.BaseCNN):
         d1 = self.d1(d2, training=training)
         x = self.conv1(d1, training=training)
 
-        return tf.nn.tanh(x)
+        return x

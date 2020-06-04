@@ -47,7 +47,7 @@ if __name__ == "__main__":
     dropout_rate_vector = [0.]
     use_batch_norm_vector = [False]
     use_bias_vector = [False]
-    lambda_vector = [100]
+    lambda_vector = [100.]
     initializer_vector = ["he_normal"]  # tf.random_normal_initializer(0., 0.02)
     label_smoothing_vector = [0.9]
     early_stopping = 30

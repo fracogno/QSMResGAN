@@ -7,11 +7,32 @@ class LossManager:
     def __init__(self):
         self.ce = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
-    def vanilla_GAN_loss(self, target, prediction):
-        return self.ce(target, prediction)
+
+    def wgan_generator_loss(self, solver, D_fake_logits):
+        G_loss = - tf.reduce_mean(D_fake_logits)
+        solver.tb_scalars["G_loss"](G_loss) if not solver is None else None
+        return G_loss
+
+    def wgan_discriminator_loss(self, solver, D, D_fake_logits, D_real_logits, input_gen, real_sample, fake_sample, LAMBDA=10.):
+        # Gradient penalty
+        eps = tf.random_uniform([D_fake_logits.shape[0], 1, 1, 1, 1], minval=0., maxval=1.)
+        inter_sample = real_sample * eps + fake_sample * (1. - eps)
+        with tf.GradientTape() as tape_gp:
+            tape_gp.watch(inter_sample)
+            inter_score = D(input_gen, inter_sample, training=True)
+
+        gp_gradients = tape_gp.gradient(inter_score, inter_sample)
+        gp_gradients_norm = tf.sqrt(tf.reduce_sum(tf.square(gp_gradients), axis=[1, 2, 3, 4]))
+        gp = tf.reduce_mean(tf.square((gp_gradients_norm - 1.0)))
+
+        # Loss
+        D_loss = tf.reduce_mean(D_fake_logits) - tf.reduce_mean(D_real_logits) + gp * LAMBDA
+        solver.tb_scalars["D_loss"](D_loss) if not solver is None else None
+
+        return D_loss
 
     def generator_loss(self, solver, disc_generated_output, gen_output, target, LAMBDA):
-        G_loss = self.vanilla_GAN_loss(tf.ones_like(disc_generated_output), disc_generated_output)
+        G_loss = self.ce(tf.ones_like(disc_generated_output), disc_generated_output)
         solver.tb_scalars["G_loss"](G_loss) if not solver is None else None
 
         l1_loss = tf.reduce_mean(tf.abs(target - gen_output))
@@ -23,10 +44,10 @@ class LossManager:
         return total_gen_loss, G_loss, l1_loss
 
     def discriminator_loss(self, solver, disc_real_output, disc_generated_output, smoothing):
-        real_loss = self.vanilla_GAN_loss(tf.ones_like(disc_real_output) * smoothing, disc_real_output)
+        real_loss = self.ce(tf.ones_like(disc_real_output) * smoothing, disc_real_output)
         solver.tb_scalars["D_real"](real_loss) if not solver is None else None
 
-        generated_loss = self.vanilla_GAN_loss(tf.zeros_like(disc_generated_output), disc_generated_output)
+        generated_loss = self.ce(tf.zeros_like(disc_generated_output), disc_generated_output)
         solver.tb_scalars["D_fake"](generated_loss) if not solver is None else None
 
         total_disc_loss = real_loss + generated_loss

@@ -73,20 +73,18 @@ class Solver():
                 x_batch = misc.apply_mask(batch["x"], mask_batch)
 
             if mode == "train":
-                predicted = self.train_step(G, D, x_batch, y_batch, mask_batch, mode)
+                predicted = self.train_step(G, D, x_batch, y_batch, mask_batch)
             else:
-                predicted = self.test_step(G, D, x_batch, y_batch, mask_batch, mode)
-            break
+                predicted = self.test_step(G, D, x_batch, y_batch, mask_batch)
 
         metrics = {key: self.tb_scalars[key].result().numpy() for key in self.best_metrics[mode]}
-        print(metrics)
         self.write_tensorboard(self.summary_writers[mode], {"input": x_batch, "ground_truth": y_batch, "predicted": predicted}, predicted.shape[-2], epoch)
         self.reset_states_tensorboard()
 
         if mode != "train":
             self.save_model(G, mode, metrics)
 
-    def train_step(self, G, D, x_batch, y_batch, mask_batch, mode):
+    def train_step(self, G, D, x_batch, y_batch, mask_batch):
 
         with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
             gen_output = G(x_batch, training=True)
