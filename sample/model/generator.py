@@ -12,7 +12,7 @@ class Generator(base_cnn.BaseCNN):
         """self.conv0 = self.CNN_layer_3D(num_filters=32, kernel_size=self.params["k_size"], stride=1, initializer=initializer, use_bias=self.params["use_bias"], upsampling=False,
                                        apply_batch_norm=False, dropout_rate=0., activation=tf.keras.layers.LeakyReLU())"""
         self.encoder = []
-        num_filters = [64, 128, 256, 512, 512, 512]
+        num_filters = [32, 64, 128, 256, 512, 512]
         for i in range(len(num_filters)):
             self.encoder.append(
                 self.CNN_layer_3D(num_filters=num_filters[i], k_size=self.params["k_size"], stride=2, initializer=initializer, use_bias=self.params["use_bias"],
