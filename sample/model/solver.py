@@ -114,7 +114,7 @@ class Solver():
         disc_generated_output = D(x_batch, gen_output, training=True)
 
         self.loss_manager.generator_loss(self, disc_generated_output, gen_output, y_batch, self.params["lambda"])
-        self.loss_manager.discriminator_loss(self, disc_real_output, disc_generated_output, self.params["label_smoothing"])
+        self.loss_manager.discriminator_loss(self, disc_real_output, disc_generated_output)
         self.loss_manager.rmse_loss(self, y_batch, gen_output, mask_batch)
 
         return gen_output
