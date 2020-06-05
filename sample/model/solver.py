@@ -17,8 +17,8 @@ class Solver():
 
         # Optimizer
         if self.training:
-            self.generator_optimizer = optimizer(self.params["lr"], beta_1=0.5)
-            self.discriminator_optimizer = optimizer(self.params["lr"], beta_1=0.5)
+            self.generator_optimizer = tf.keras.optimizers.Adam(self.params["lr"], beta_1=0.5)
+            self.discriminator_optimizer = tf.keras.optimizers.SGD(0.0002)
 
             misc.save_json(self.ckp_path + "params.json", self.params)
 
@@ -93,7 +93,7 @@ class Solver():
             disc_generated_output = D(x_batch, gen_output, training=True)
 
             gen_total_loss, gen_gan_loss, gen_l1_loss = self.loss_manager.generator_loss(self, disc_generated_output, gen_output, y_batch, self.params["lambda"])
-            disc_loss = self.loss_manager.discriminator_loss(self, disc_real_output, disc_generated_output, self.params["label_smoothing"])
+            disc_loss = self.loss_manager.discriminator_loss(self, disc_real_output, disc_generated_output)
 
             generator_gradients = gen_tape.gradient(gen_total_loss, G.trainable_variables)
             discriminator_gradients = disc_tape.gradient(disc_loss, D.trainable_variables)

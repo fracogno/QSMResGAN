@@ -43,11 +43,11 @@ class LossManager:
 
         return total_gen_loss, G_loss, l1_loss
 
-    def discriminator_loss(self, solver, disc_real_output, disc_generated_output, smoothing):
-        real_loss = self.ce(tf.ones_like(disc_real_output) * smoothing, disc_real_output)
+    def discriminator_loss(self, solver, disc_real_output, disc_generated_output):
+        real_loss = self.ce(tf.ones_like(disc_real_output) * tf.random.uniform([1], 0.7, 1.2)[0], disc_real_output)
         solver.tb_scalars["D_real"](real_loss) if not solver is None else None
 
-        generated_loss = self.ce(tf.zeros_like(disc_generated_output), disc_generated_output)
+        generated_loss = self.ce(tf.zeros_like(disc_generated_output) * tf.random.uniform([1], 0., 0.3)[0], disc_generated_output)
         solver.tb_scalars["D_fake"](generated_loss) if not solver is None else None
 
         total_disc_loss = real_loss + generated_loss

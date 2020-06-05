@@ -40,16 +40,15 @@ def train(params):
 
 
 if __name__ == "__main__":
-    lr_vector = [1e-4]
+    lr_vector = [2e-4]
     batch_size_vector = [32]
-    kernel_size_vector = [3]
+    kernel_size_vector = [4]
     optimizer_vector = [tf.keras.optimizers.Adam]  # Adam, Adamax, Nadam, Ftrl, RMSprop
     dropout_rate_vector = [0.]
     use_batch_norm_vector = [False]
     use_bias_vector = [False]
     lambda_vector = [100.]
     initializer_vector = ["he_normal"]  # tf.random_normal_initializer(0., 0.02)
-    label_smoothing_vector = [0.9]
     early_stopping = 30
 
     for lr in lr_vector:
@@ -58,18 +57,16 @@ if __name__ == "__main__":
                 for optimizer in optimizer_vector:
                     for dropout_rate in dropout_rate_vector:
                         for use_batch_norm in use_batch_norm_vector:
-                            for label_smoothing in label_smoothing_vector:
-                                for lambda_ in lambda_vector:
-                                    for use_bias in use_bias_vector:
-                                        for initializer in initializer_vector:
-                                            train({"lr": lr,
-                                                   "batch_size": batch_size,
-                                                   "k_size": kernel_size,
-                                                   "optimizer": optimizer,
-                                                   "dropout_rate": dropout_rate,
-                                                   "use_batch_norm": use_batch_norm,
-                                                   "use_bias": use_bias,
-                                                   "initializer": initializer,
-                                                   "lambda": lambda_,
-                                                   "early_stopping": early_stopping,
-                                                   "label_smoothing": label_smoothing})
+                            for lambda_ in lambda_vector:
+                                for use_bias in use_bias_vector:
+                                    for initializer in initializer_vector:
+                                        train({"lr": lr,
+                                               "batch_size": batch_size,
+                                               "k_size": kernel_size,
+                                               "optimizer": optimizer,
+                                               "dropout_rate": dropout_rate,
+                                               "use_batch_norm": use_batch_norm,
+                                               "use_bias": use_bias,
+                                               "initializer": initializer,
+                                               "lambda": lambda_,
+                                               "early_stopping": early_stopping})
