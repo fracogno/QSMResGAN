@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import nibabel as nib
 from datetime import datetime
-import src.ResUNet as network, src.utilities as utils, src.loss as loss
+import ResUNet as network, utilities as utils, loss
 
 # Set GPU ??
 tf.logging.set_verbosity(tf.logging.ERROR)
