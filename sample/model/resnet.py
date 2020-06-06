@@ -3,9 +3,9 @@ import tensorflow as tf
 from model import base_cnn
 
 
-class ResBlockOLD(base_cnn.BaseCNN):
+class ResBlock(base_cnn.BaseCNN):
     def __init__(self, num_filters, kernel_size, stride, initializer, use_bias, upsampling, apply_batch_norm, dropout_rate):
-        super(ResBlockOLD, self).__init__()
+        super(ResBlock, self).__init__()
 
         # https://www.tensorflow.org/tutorials/customization/custom_layers RESNET LAYER
         self.conv1a = self.CNN_layer_3D(num_filters, kernel_size, stride, initializer, use_bias, upsampling, apply_batch_norm, dropout_rate, True)

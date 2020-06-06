@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from model import resnet_block, base_cnn
+from model import resnet, base_cnn
 
 
 class Generator(base_cnn.BaseCNN):
