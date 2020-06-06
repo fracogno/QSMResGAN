@@ -17,8 +17,11 @@ class Solver():
 
         # Optimizer
         if self.training:
+            """self.generator_optimizer = tf.keras.optimizers.Adam(self.params["lr"], beta_1=0.5)
+            self.discriminator_optimizer = tf.keras.optimizers.SGD(0.0002)"""
             self.generator_optimizer = tf.keras.optimizers.Adam(self.params["lr"], beta_1=0.5)
-            self.discriminator_optimizer = tf.keras.optimizers.SGD(0.0002)
+            self.discriminator_optimizer = tf.keras.optimizers.Adam(self.params["lr"], beta_1=0.5)
+
 
             misc.save_json(self.ckp_path + "params.json", self.params)
 

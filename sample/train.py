@@ -40,9 +40,9 @@ def train(params):
 
 
 if __name__ == "__main__":
-    lr_vector = [2e-4]
-    batch_size_vector = [16]
-    kernel_size_vector = [4]
+    lr_vector = [1e-4] #2e-4
+    batch_size_vector = [32]
+    kernel_size_vector = [3]
     optimizer_vector = [tf.keras.optimizers.Adam]  # Adam, Adamax, Nadam, Ftrl, RMSprop
     dropout_rate_vector = [0.]
     use_batch_norm_vector = [False]
