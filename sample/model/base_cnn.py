@@ -6,7 +6,7 @@ class BaseCNN(tf.keras.Model):
     def __init__(self):
         super(BaseCNN, self).__init__()
 
-    def CNN_layer_3D(self, num_filters, k_size, stride, initializer, use_bias, upsampling, apply_batch_norm, dropout_rate, activation):
+    def CNN_layer_3D(self, num_filters, k_size, stride, initializer, use_bias, upsampling=False, apply_batch_norm=False, dropout_rate=0.0, activation=None):
         result = tf.keras.Sequential()
 
         # Decide whether downsampling or upsampling
