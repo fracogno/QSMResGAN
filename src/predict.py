@@ -5,14 +5,12 @@ import pickle
 import nibabel as nib
 
 # Paths
-basePath = "/scratch/cai/deepQSMGAN/"
-basePath ="/home/francesco/UQ/QSMResGAN/"
+basePath = "/scratch/cai/QSMResGAN/"
 checkpointPath = "ckp_20191022_1335_shapes_shape64_ex100_2019_08_30/"
 
 # Get data
-X, Y, masks = utils.loadChallengeData(basePath + "data/QSM_Challenge2_download_stage2/DatasetsStep2/")
-#X, Y, masks = utils.loadChallengeOneData(basePath + "data/20170327_qsm2016_recon_challenge/data/")
-#X, masks, names = utils.loadRealData()
+X, Y, masks = utils.loadChallengeData(basePath + "dataset/QSM_Challenge2_download_stage2/")
+#X, Y, masks = utils.loadChallengeOneData(basePath + "dataset/20170327_qsm2016_recon_challenge/data/")
 X_padded, originalShape, valuesSplit = utils.addPadding(X, (256, 256, 256))
 X_tensor = tf.placeholder(tf.float32, shape=[None, X_padded.shape[1], X_padded.shape[2], X_padded.shape[3], X_padded.shape[4]])
 is_train = tf.placeholder(tf.bool, name='is_train')
@@ -39,8 +37,8 @@ with tf.Session() as sess:
 		predicted = utils.applyMaskToVolume(predicted, masks)
 
 		# Calculate metrics over validation and save it
-		#metrics = utils.getMetrics(Y, predicted, masks)
-		#print(metrics)
+		metrics = utils.getMetrics(Y, predicted, masks)
+		print(metrics)
 
-		#for j in range(len(predicted)):
-		#	utils.saveNii(predicted[j], basePath + "data/deepQSMResGAN/out-metric" + str(i) + "-vol-" + str(j))
+		for j in range(len(predicted)):
+			utils.saveNii(predicted[j], basePath + "dataset/out-metric" + str(i) + "-vol-" + str(j))
