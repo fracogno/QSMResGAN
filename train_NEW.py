@@ -11,11 +11,8 @@ os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 # Paths
-basePath = "/scratch/cai/deepQSMGAN/"
-dataPath = "data/shapes_shape64_ex100_2019_08_30"
-
-#basePath ="/home/francesco/UQ/deepQSMGAN/"
-#dataPath = "data/shapes_shape64_ex100_2019_08_20"
+basePath = "/scratch/cai/QSMResGAN/"
+dataPath = "dataset/shapes_shape64_ex100_2019_08_30"
 checkpointsPath = basePath + "ckp_" + datetime.now().strftime("%Y%m%d_%H%M") + "_" + dataPath.split("/")[-1]
 
 # Parameters
@@ -28,7 +25,7 @@ labelSmoothing = 0.9
 
 # Get data
 X_tensor, Y_tensor = utils.getTrainingDataTF(basePath + dataPath, batchSize, epochs)
-X_val, Y_val, mask_val = utils.loadChallengeData(basePath + "data/QSM_Challenge2_download_stage2/DatasetsStep2/")
+X_val, Y_val, mask_val = utils.loadChallengeData(basePath + "dataset/QSM_Challenge2_download_stage2/")
 X_val_padded, originalShape, valuesSplit = utils.addPadding(X_val, 256)
 X_val_tensor = tf.placeholder(tf.float32, shape=[None, X_val_padded.shape[1], X_val_padded.shape[2], X_val_padded.shape[3], X_val_padded.shape[4]], name='X_val')
 is_train = tf.placeholder(tf.bool, name='is_train')
