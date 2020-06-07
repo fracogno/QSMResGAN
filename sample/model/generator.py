@@ -34,7 +34,7 @@ class Generator(base_cnn.BaseCNN):
                                        apply_batch_norm=False, dropout_rate=0., activation=None)"""
 
         # Encoder
-        self.conv0 = self.CNN_layer_3D(32, self.params["k_size"], 1, initializer, self.params["use_bias"], False, False, 0., False)
+        self.conv0 = self.CNN_layer_3D(32, self.params["k_size"], 1, initializer, self.params["use_bias"], activation=tf.keras.layers.ReLU())
         self.e1 = resnet.ResBlock(64, self.params["k_size"], 2, initializer, self.params["use_bias"], False, self.params["use_batch_norm"], self.params["dropout_rate"])
         self.e2 = resnet.ResBlock(128, self.params["k_size"], 2, initializer, self.params["use_bias"], False, self.params["use_batch_norm"], self.params["dropout_rate"])
         self.e3 = resnet.ResBlock(256, self.params["k_size"], 2, initializer, self.params["use_bias"], False, self.params["use_batch_norm"], self.params["dropout_rate"])
@@ -50,7 +50,7 @@ class Generator(base_cnn.BaseCNN):
         self.d3 = resnet.ResBlock(256, self.params["k_size"], 2, initializer, self.params["use_bias"], True, self.params["use_batch_norm"], self.params["dropout_rate"])
         self.d2 = resnet.ResBlock(128, self.params["k_size"], 2, initializer, self.params["use_bias"], True, self.params["use_batch_norm"], self.params["dropout_rate"])
         self.d1 = resnet.ResBlock(64, self.params["k_size"], 2, initializer, self.params["use_bias"], True, self.params["use_batch_norm"], self.params["dropout_rate"])
-        self.conv1 = self.CNN_layer_3D(1, self.params["k_size"], 1, initializer, self.params["use_bias"], True, False, 0., False)
+        self.conv1 = self.CNN_layer_3D(1, self.params["k_size"], 1, initializer, self.params["use_bias"])
 
     def call(self, input_tensor, training=False):
 

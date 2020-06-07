@@ -15,7 +15,7 @@ class Discriminator(base_cnn.BaseCNN):
             self.CNN_layer_3D(64, self.params["k_size"], 2, initializer, self.params["use_bias"], False, False, self.params["dropout_rate"], tf.keras.layers.LeakyReLU()),
             self.CNN_layer_3D(128, self.params["k_size"], 2, initializer, self.params["use_bias"], False, False, self.params["dropout_rate"], tf.keras.layers.LeakyReLU()),
             self.CNN_layer_3D(256, self.params["k_size"], 1, initializer, self.params["use_bias"], False, False, self.params["dropout_rate"], tf.keras.layers.LeakyReLU()),
-            self.CNN_layer_3D(1, self.params["k_size"], 1, initializer, self.params["use_bias"], False, False, False, None)
+            self.CNN_layer_3D(1, self.params["k_size"], 1, initializer, self.params["use_bias"])
         ])
 
     def call(self, x, y, training=False):
