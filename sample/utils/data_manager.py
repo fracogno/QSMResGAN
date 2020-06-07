@@ -16,8 +16,8 @@ def get_QSM_datasets(base_path, training_data_folder, qsm_challenge_2017_folder,
         datasets["val"] = records_manager.load_dataset(base_path + training_data_folder + "/val/", shape, batch_size)
 
     # QSM challenges data
-    datasets["qsm_2017"] = get_QSM_challenge_2017_data(base_path + qsm_challenge_2017_folder, (256, 256, 256), normalize=False)
-    datasets["qsm_2019"] = get_QSM_challenge_2019_data(base_path + qsm_challenge_2019_folder, (256, 256, 256), normalize=True)
+    datasets["qsm_2017"] = get_QSM_challenge_2017_data(base_path + qsm_challenge_2017_folder, (192, 224, 224), normalize=False)
+    datasets["qsm_2019"] = get_QSM_challenge_2019_data(base_path + qsm_challenge_2019_folder, (192, 224, 224), normalize=True)
 
     return datasets
 
