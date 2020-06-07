@@ -5,9 +5,8 @@ from model import resnet, base_cnn
 
 class Generator(base_cnn.BaseCNN):
 
-    def __init__(self, params, initializer):
+    def __init__(self, k_size, initializer, use_bias, batch_norm, dropout_rate):
         super(Generator, self).__init__()
-        self.params = params
 
         """self.conv0 = self.CNN_layer_3D(num_filters=32, kernel_size=self.params["k_size"], stride=1, initializer=initializer, use_bias=self.params["use_bias"], upsampling=False,
                                        apply_batch_norm=False, dropout_rate=0., activation=tf.keras.layers.LeakyReLU())"""
@@ -34,23 +33,23 @@ class Generator(base_cnn.BaseCNN):
                                        apply_batch_norm=False, dropout_rate=0., activation=None)"""
 
         # Encoder
-        self.conv0 = self.CNN_layer_3D(32, self.params["k_size"], 1, initializer, self.params["use_bias"], activation=tf.keras.layers.ReLU())
-        self.e1 = resnet.ResBlock(64, self.params["k_size"], 2, initializer, self.params["use_bias"], False, self.params["use_batch_norm"], self.params["dropout_rate"])
-        self.e2 = resnet.ResBlock(128, self.params["k_size"], 2, initializer, self.params["use_bias"], False, self.params["use_batch_norm"], self.params["dropout_rate"])
-        self.e3 = resnet.ResBlock(256, self.params["k_size"], 2, initializer, self.params["use_bias"], False, self.params["use_batch_norm"], self.params["dropout_rate"])
+        self.conv0 = self.CNN_layer_3D(32, k_size, 1, initializer, use_bias, activation=tf.keras.layers.ReLU())
+        self.e1 = resnet.ResBlock(64, k_size, 2, initializer, use_bias, False, False, dropout_rate)
+        self.e2 = resnet.ResBlock(128, k_size, 2, initializer, use_bias, False, False, dropout_rate)
+        self.e3 = resnet.ResBlock(256, k_size, 2, initializer, use_bias, False, False, dropout_rate)
 
         # Bottle neck
-        self.b1 = resnet.ResBlock(512, self.params["k_size"], 1, initializer, self.params["use_bias"], False, self.params["use_batch_norm"], self.params["dropout_rate"])
-        self.b2 = resnet.ResBlock(512, self.params["k_size"], 1, initializer, self.params["use_bias"], False, self.params["use_batch_norm"], self.params["dropout_rate"])
-        self.b3 = resnet.ResBlock(1024, self.params["k_size"], 1, initializer, self.params["use_bias"], False, self.params["use_batch_norm"], self.params["dropout_rate"])
-        self.b4 = resnet.ResBlock(512, self.params["k_size"], 1, initializer, self.params["use_bias"], False, self.params["use_batch_norm"], self.params["dropout_rate"])
-        self.b5 = resnet.ResBlock(512, self.params["k_size"], 1, initializer, self.params["use_bias"], False, self.params["use_batch_norm"], self.params["dropout_rate"])
+        self.b1 = resnet.ResBlock(512, k_size, 1, initializer, use_bias, False, False, dropout_rate)
+        self.b2 = resnet.ResBlock(512, k_size, 1, initializer, use_bias, False, False, dropout_rate)
+        self.b3 = resnet.ResBlock(1024, k_size, 1, initializer, use_bias, False, False, dropout_rate)
+        self.b4 = resnet.ResBlock(512, k_size, 1, initializer, use_bias, False, False, dropout_rate)
+        self.b5 = resnet.ResBlock(512, k_size, 1, initializer, use_bias, False, False, dropout_rate)
 
         # Decoder
-        self.d3 = resnet.ResBlock(256, self.params["k_size"], 2, initializer, self.params["use_bias"], True, self.params["use_batch_norm"], self.params["dropout_rate"])
-        self.d2 = resnet.ResBlock(128, self.params["k_size"], 2, initializer, self.params["use_bias"], True, self.params["use_batch_norm"], self.params["dropout_rate"])
-        self.d1 = resnet.ResBlock(64, self.params["k_size"], 2, initializer, self.params["use_bias"], True, self.params["use_batch_norm"], self.params["dropout_rate"])
-        self.conv1 = self.CNN_layer_3D(1, self.params["k_size"], 1, initializer, self.params["use_bias"])
+        self.d3 = resnet.ResBlock(256, k_size, 2, initializer, use_bias, True, False, dropout_rate)
+        self.d2 = resnet.ResBlock(128, k_size, 2, initializer, use_bias, True, False, dropout_rate)
+        self.d1 = resnet.ResBlock(64, k_size, 2, initializer, use_bias, True, False, dropout_rate)
+        self.conv1 = self.CNN_layer_3D(1, k_size, 1, initializer, use_bias)
 
     def call(self, input_tensor, training=False):
 

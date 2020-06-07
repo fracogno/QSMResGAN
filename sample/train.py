@@ -17,8 +17,8 @@ def train(params):
                                             "QSM_Challenge2_download_stage2", 64, params["batch_size"], get_train_data=True)
 
     # Networks
-    gen = generator.Generator(params, params["initializer"])
-    disc = discriminator.Discriminator(params, params["initializer"])
+    gen = generator.Generator(params["k_size"], params["initializer"], params["use_bias"], params["use_batch_norm"], params["dropout_rate"])
+    disc = discriminator.Discriminator(4, params["initializer"], params["use_bias"], params["use_batch_norm"], params["dropout_rate"])
 
     # Solver to train network
     slv = solver.Solver(params, ckp_path, list(dataset.keys()), optimizer)
@@ -41,7 +41,7 @@ def train(params):
 
 if __name__ == "__main__":
     lr_vector = [1e-4] #2e-4
-    batch_size_vector = [32]
+    batch_size_vector = [16]
     kernel_size_vector = [3]
     optimizer_vector = [tf.keras.optimizers.Adam]  # Adam, Adamax, Nadam, Ftrl, RMSprop
     dropout_rate_vector = [0.]

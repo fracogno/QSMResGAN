@@ -4,14 +4,14 @@ from model import base_cnn
 
 
 class ResBlock(base_cnn.BaseCNN):
-    def __init__(self, num_filters, kernel_size, stride, initializer, use_bias, upsampling, apply_batch_norm, dropout_rate):
+    def __init__(self, num_filters, kernel_size, stride, initializer, use_bias, upsampling=False, batch_norm=False, dropout_rate=0.0, activation=tf.keras.layers.ReLU()):
         super(ResBlock, self).__init__()
 
         # https://www.tensorflow.org/tutorials/customization/custom_layers RESNET LAYER
-        self.conv1a = self.CNN_layer_3D(num_filters, kernel_size, stride, initializer, use_bias, upsampling, apply_batch_norm, dropout_rate, tf.keras.layers.ReLU())
-        self.conv2 = self.CNN_layer_3D(num_filters, kernel_size, 1, initializer, use_bias, False, apply_batch_norm, dropout_rate, None)
+        self.conv1a = self.CNN_layer_3D(num_filters, kernel_size, stride, initializer, use_bias, upsampling, batch_norm, dropout_rate, activation)
+        self.conv2 = self.CNN_layer_3D(num_filters, kernel_size, 1, initializer, use_bias, False, batch_norm, dropout_rate)
 
-        self.conv1b = self.CNN_layer_3D(num_filters, 1, stride, initializer, use_bias, upsampling, apply_batch_norm, dropout_rate, None)
+        self.conv1b = self.CNN_layer_3D(num_filters, 1, stride, initializer, use_bias, upsampling, batch_norm, dropout_rate)
 
     def call(self, input_tensor, training=False):
         # First part

@@ -5,17 +5,15 @@ from model import base_cnn
 
 class Discriminator(base_cnn.BaseCNN):
 
-    def __init__(self, params, initializer):
+    def __init__(self, k_size, initializer, use_bias, batch_norm, dropout_rate):
         super(Discriminator, self).__init__()
-        self.params = params
-        self.params["k_size"] = 4
 
         self.net = tf.keras.Sequential([
-            self.CNN_layer_3D(32, self.params["k_size"], 2, initializer, self.params["use_bias"], False, False, self.params["dropout_rate"], tf.keras.layers.LeakyReLU()),
-            self.CNN_layer_3D(64, self.params["k_size"], 2, initializer, self.params["use_bias"], False, False, self.params["dropout_rate"], tf.keras.layers.LeakyReLU()),
-            self.CNN_layer_3D(128, self.params["k_size"], 2, initializer, self.params["use_bias"], False, False, self.params["dropout_rate"], tf.keras.layers.LeakyReLU()),
-            self.CNN_layer_3D(256, self.params["k_size"], 1, initializer, self.params["use_bias"], False, False, self.params["dropout_rate"], tf.keras.layers.LeakyReLU()),
-            self.CNN_layer_3D(1, self.params["k_size"], 1, initializer, self.params["use_bias"])
+            self.CNN_layer_3D(32, k_size, 2, initializer, use_bias, False, False, dropout_rate, tf.keras.layers.LeakyReLU()),
+            self.CNN_layer_3D(64, k_size, 2, initializer, use_bias, False, False, dropout_rate, tf.keras.layers.LeakyReLU()),
+            self.CNN_layer_3D(128, k_size, 2, initializer, use_bias, False, False, dropout_rate, tf.keras.layers.LeakyReLU()),
+            self.CNN_layer_3D(256, k_size, 1, initializer, use_bias, False, False, dropout_rate, tf.keras.layers.LeakyReLU()),
+            self.CNN_layer_3D(1, k_size, 1, initializer, use_bias)
         ])
 
     def call(self, x, y, training=False):
