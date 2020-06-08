@@ -1,7 +1,6 @@
 import os
 import tensorflow as tf
 import numpy as np
-import cv2
 import nibabel as nib
 import glob
 
@@ -99,12 +98,12 @@ def computeddRMSE(true, fake, mask):
     return rmse, ddrmse
 
 
-def dilateMask(mask):
+"""def dilateMask(mask):
     kernel = np.ones((3,3))
     for i in range(mask.shape[-1]):
         mask[:,:,i] = cv2.dilate(mask[:,:,i], kernel)
 
-    return mask
+    return mask"""
 
 
 def getMetrics(Y, X, masks):

@@ -1,44 +1,47 @@
 import tensorflow as tf
 import numpy as np
-import src.ResUNet as network, src.utilities as utils
-import pickle
-import nibabel as nib
+import ResUNet as network, utilities as utils, data_manager, misc
+import os
 
-# Paths
-basePath = "/scratch/cai/QSMResGAN/"
-checkpointPath = "ckp_20191022_1335_shapes_shape64_ex100_2019_08_30/"
+base_path = os.getcwd()
+base_path = "/scratch/cai/QSMResGAN/" if "scratch" in base_path else "/" + "/".join(base_path.split("/")[:-1]) + "/"
+ckp_path = "ckp_20191022_1335_shapes_shape64_ex100_2019_08_30/"
 
-# Get data
-X, Y, masks = utils.loadChallengeData(basePath + "dataset/QSM_Challenge2_download_stage2/")
-#X, Y, masks = utils.loadChallengeOneData(basePath + "dataset/20170327_qsm2016_recon_challenge/data/")
-X_padded, originalShape, valuesSplit = utils.addPadding(X, (256, 256, 256))
-X_tensor = tf.placeholder(tf.float32, shape=[None, X_padded.shape[1], X_padded.shape[2], X_padded.shape[3], X_padded.shape[4]])
+#base_path = "/home/"
+dataset = data_manager.get_QSM_datasets(base_path + "dataset/", None, "20170327_qsm2016_recon_challenge", "QSM_Challenge2_download_stage2", 64, None, noisy_data=True)
+
 is_train = tf.placeholder(tf.bool, name='is_train')
+X_tensor_2017 = tf.placeholder(tf.float32, shape=[None, dataset["qsm_2017"][0]["x"].shape[1], dataset["qsm_2017"][0]["x"].shape[2], dataset["qsm_2017"][0]["x"].shape[3], 1])
+X_tensor_2019 = tf.placeholder(tf.float32, shape=[None, dataset["qsm_2019"][0]["x"].shape[1], dataset["qsm_2019"][0]["x"].shape[2], dataset["qsm_2019"][0]["x"].shape[3], 1])
+Y_pred_2017 = network.getGenerator(X_tensor_2017)
+Y_pred_2019 = network.getGenerator(X_tensor_2019, reuse=True)
 
-# Network
-Y_generated = network.getGenerator(X_tensor)    
+print(X_tensor_2017.shape)
+print(X_tensor_2019.shape)
+print(Y_pred_2017.shape)
+print(Y_pred_2019.shape)
 
-#num_metrics = len(utils.getMetrics(Y, X, masks))
-num_metrics = 1
 with tf.Session() as sess:
+    saver = tf.train.Saver()
+    sess.run(tf.global_variables_initializer())
+    saver.restore(sess, base_path + ckp_path + "model-metric0")
 
-	for i in range(num_metrics):
-		saver = tf.train.Saver()
-		sess.run(tf.global_variables_initializer())
-		saver.restore(sess, basePath + checkpointPath + "model-metric" + str(i))
-		
-		# Predict from network
-		predicted = []
-		for k in range(len(X_padded)):
-			singlePrediction = sess.run(Y_generated, feed_dict={ X_tensor : [X_padded[k]], is_train : False })
-			predicted.append(singlePrediction[0])
+    for mode in list(dataset.keys()):
+        rmse_tot, ddrmse_tot = [], []
+        for batch in dataset[mode]:
+            if "qsm_2017" in mode:
+                pred = sess.run(Y_pred_2017, feed_dict={X_tensor_2017: batch["x"], is_train: False})
+            elif "qsm_2019" in mode:
+                pred = sess.run(Y_pred_2019, feed_dict={X_tensor_2019: batch["x"], is_train: False})
+            else:
+                raise NotImplementedError("Mode " + str(mode))
 
-		predicted = utils.removePadding(np.array(predicted), originalShape, valuesSplit)
-		predicted = utils.applyMaskToVolume(predicted, masks)
+            # Apply mask and compute error
+            pred = misc.apply_mask(pred, batch["mask"])
+            rmse, ddrmse = utils.computeddRMSE(batch["y"], pred, batch["mask"])
+            rmse_tot.append(rmse)
+            ddrmse_tot.append(ddrmse)
 
-		# Calculate metrics over validation and save it
-		metrics = utils.getMetrics(Y, predicted, masks)
-		print(metrics)
+            misc.save_nii(pred[0, :, :, :, 0], base_path + ckp_path + "test-" + batch["name"].replace('.', ''))
 
-		for j in range(len(predicted)):
-			utils.saveNii(predicted[j], basePath + "dataset/out-metric" + str(i) + "-vol-" + str(j))
+        print(mode + " : RMSE " + str(round(np.array(rmse_tot).mean(), 3)) + " | ddRMSE : " + str(round(np.array(ddrmse_tot).mean(), 3)))
