@@ -33,22 +33,22 @@ class Generator(base_cnn.BaseCNN):
                                        apply_batch_norm=False, dropout_rate=0., activation=None)"""
 
         # Encoder
-        self.conv0 = self.CNN_layer_3D(32, k_size, 1, initializer, use_bias, activation=tf.keras.layers.ReLU())
-        self.e1 = resnet.ResBlock(64, k_size, 2, initializer, use_bias, False, False, dropout_rate)
-        self.e2 = resnet.ResBlock(128, k_size, 2, initializer, use_bias, False, False, dropout_rate)
-        self.e3 = resnet.ResBlock(256, k_size, 2, initializer, use_bias, False, False, dropout_rate)
+        self.conv0 = self.CNN_layer_3D(32, k_size, 1, initializer, use_bias, activation=tf.keras.layers.LeakyReLU())
+        self.e1 = resnet.ResBlock(64, k_size, 2, initializer, use_bias, False, False, dropout_rate, activation=tf.keras.layers.LeakyReLU())
+        self.e2 = resnet.ResBlock(128, k_size, 2, initializer, use_bias, False, False, dropout_rate, activation=tf.keras.layers.LeakyReLU())
+        self.e3 = resnet.ResBlock(256, k_size, 2, initializer, use_bias, False, False, dropout_rate, activation=tf.keras.layers.LeakyReLU())
 
         # Bottle neck
-        self.b1 = resnet.ResBlock(512, k_size, 1, initializer, use_bias, False, False, dropout_rate)
-        self.b2 = resnet.ResBlock(512, k_size, 1, initializer, use_bias, False, False, dropout_rate)
-        self.b3 = resnet.ResBlock(1024, k_size, 1, initializer, use_bias, False, False, dropout_rate)
-        self.b4 = resnet.ResBlock(512, k_size, 1, initializer, use_bias, False, False, dropout_rate)
-        self.b5 = resnet.ResBlock(512, k_size, 1, initializer, use_bias, False, False, dropout_rate)
+        self.b1 = resnet.ResBlock(512, k_size, 1, initializer, use_bias, False, False, dropout_rate, activation=tf.keras.layers.LeakyReLU())
+        self.b2 = resnet.ResBlock(512, k_size, 1, initializer, use_bias, False, False, dropout_rate, activation=tf.keras.layers.LeakyReLU())
+        self.b3 = resnet.ResBlock(1024, k_size, 1, initializer, use_bias, False, False, dropout_rate, activation=tf.keras.layers.LeakyReLU())
+        self.b4 = resnet.ResBlock(512, k_size, 1, initializer, use_bias, False, False, 0.5, activation=tf.keras.layers.LeakyReLU())
+        self.b5 = resnet.ResBlock(512, k_size, 1, initializer, use_bias, False, False, 0.5, activation=tf.keras.layers.LeakyReLU())
 
         # Decoder
-        self.d3 = resnet.ResBlock(256, k_size, 2, initializer, use_bias, True, False, dropout_rate)
-        self.d2 = resnet.ResBlock(128, k_size, 2, initializer, use_bias, True, False, dropout_rate)
-        self.d1 = resnet.ResBlock(64, k_size, 2, initializer, use_bias, True, False, dropout_rate)
+        self.d3 = resnet.ResBlock(256, k_size, 2, initializer, use_bias, True, False, 0.5, activation=tf.keras.layers.LeakyReLU())
+        self.d2 = resnet.ResBlock(128, k_size, 2, initializer, use_bias, True, False, dropout_rate, activation=tf.keras.layers.LeakyReLU())
+        self.d1 = resnet.ResBlock(64, k_size, 2, initializer, use_bias, True, False, dropout_rate, activation=tf.keras.layers.LeakyReLU())
         self.conv1 = self.CNN_layer_3D(1, k_size, 1, initializer, use_bias)
 
     def call(self, input_tensor, training=False):
